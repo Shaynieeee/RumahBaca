@@ -1,0 +1,63 @@
+[07-Mar-2025 03:44:48 Europe/Berlin] Session contents: Array
+(
+    [login_user] => min
+    [role] => 1
+)
+
+[07-Mar-2025 03:44:48 Europe/Berlin] Username: min
+[07-Mar-2025 03:44:48 Europe/Berlin] Role query result: Array
+(
+    [id_p_role] => 1
+    [id_t_account] => 16
+)
+
+[07-Mar-2025 03:44:48 Europe/Berlin] 
+
+=== Input Buku Baru ===
+[07-Mar-2025 03:44:48 Europe/Berlin] POST data: Array
+(
+    [nama_buku] => Smart Strategies: AI Tools for Sales and Marketing Excellence
+    [penulis] => Tadeusz Murawski
+    [penerbit] => Artificial Intelligence
+    [tahun_terbit] => 2019
+    [jenis] => Pengembangan Diri
+    [stok] => 25
+    [sinopsis] => Unlock the power of AI with \"Smart Strategies: AI Tools for Sales and Marketing Excellence\" by Tadeusz Murawski. This comprehensive guide dives deep into the transformative potential of artificial intelligence, revealing how to optimize sales and m
+    [harga] => 25000
+    [kode_rak] => 2
+    [isbn] => 02839101837
+    [bahasa] => Inggris
+    [total_halaman] => 47
+    [batas_baca_guest] => 10
+    [submit] => 
+)
+
+[07-Mar-2025 03:44:48 Europe/Berlin] FILES data: Array
+(
+    [gambar] => Array
+        (
+            [name] => Screenshot 2025-03-07 091650.png
+            [full_path] => Screenshot 2025-03-07 091650.png
+            [type] => image/png
+            [tmp_name] => C:\xampp\tmp\phpD10A.tmp
+            [error] => 0
+            [size] => 693133
+        )
+
+    [file_buku] => Array
+        (
+            [name] => 
+            [full_path] => 
+            [type] => 
+            [tmp_name] => 
+            [error] => 4
+            [size] => 0
+        )
+
+)
+
+[07-Mar-2025 03:44:48 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of variables must match the number of parameters in the prepared statement in C:\xampp\htdocs\Perpustakaan\form\input_buku.php:124
+Stack trace:
+#0 C:\xampp\htdocs\Perpustakaan\form\input_buku.php(124): mysqli_stmt_bind_param(Object(mysqli_stmt), 'sssssssisisiiis...', 'Smart Strategie...', '02839101837', 'Pengembangan Di...', 'Tadeusz Murawsk...', 'Artificial Inte...', 'Inggris', '2019', 25000, '2', 25, 'Unlock the powe...', 47, 10, '1741315488_Scre...', '1741314249_Smar...', 'min', 11)
+#1 {main}
+  thrown in C:\xampp\htdocs\Perpustakaan\form\input_buku.php on line 124

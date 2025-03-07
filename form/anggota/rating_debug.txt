@@ -1,0 +1,98 @@
+[2025-02-19 03:26:56] === Mulai Proses Rating ===
+[2025-02-19 03:26:56] Session Data: Array
+(
+    [login_user] => Tasya
+    [role] => 3
+    [error] => Data anggota tidak ditemukan
+)
+
+[2025-02-19 03:26:56] POST Data: Array
+(
+    [id_buku] => 7
+    [rating] => 3
+    [ulasan] => bagus
+)
+
+[2025-02-19 03:26:56] Query Anggota: SELECT id_t_anggota FROM t_anggota WHERE nama = ?
+[2025-02-19 03:26:56] Data Anggota: 
+[2025-02-19 03:26:56] ERROR: Data anggota tidak ditemukan
+[2025-02-19 03:27:59] === Mulai Proses Rating ===
+[2025-02-19 03:27:59] Session Data: Array
+(
+    [login_user] => Tasya
+    [role] => 3
+    [error] => Data anggota tidak ditemukan
+)
+
+[2025-02-19 03:27:59] POST Data: Array
+(
+    [id_buku] => 7
+    [rating] => 3
+    [ulasan] => bagus
+)
+
+[2025-02-19 03:27:59] Query Anggota: SELECT id_t_anggota FROM t_anggota WHERE nama = ?
+[2025-02-19 03:27:59] Data Anggota: 
+[2025-02-19 03:27:59] ERROR: Data anggota tidak ditemukan
+[2025-02-19 03:31:03] === Mulai Proses Rating ===
+[2025-02-19 03:31:03] Session Data: Array
+(
+    [login_user] => Tasya
+    [role] => 3
+    [error] => Data anggota tidak ditemukan
+)
+
+[2025-02-19 03:31:03] POST Data: Array
+(
+    [id_buku] => 7
+    [rating] => 3
+    [ulasan] => bagus
+)
+
+[2025-02-19 03:31:03] ERROR: Data anggota tidak ditemukan untuk nama: Tasya
+[2025-02-19 03:50:35] === Mulai Proses Rating ===
+[2025-02-19 03:50:35] Session Data: Array
+(
+    [login_user] => Tasya
+    [role] => 3
+)
+
+[2025-02-19 03:50:35] POST Data: Array
+(
+    [id_buku] => 7
+    [rating] => 3
+    [ulasan] => bagus
+)
+
+[2025-02-19 03:50:35] ERROR: Data anggota tidak ditemukan
+[2025-02-19 04:06:52] === Mulai Proses Rating ===
+[2025-02-19 04:06:52] Session Data: Array
+(
+    [login_user] => Tasya
+    [role] => 3
+)
+
+[2025-02-19 04:06:52] POST Data: Array
+(
+    [id_buku] => 7
+    [rating] => 3
+    [ulasan] => bagus
+)
+
+[2025-02-19 04:06:52] ERROR: Data anggota tidak ditemukan
+[2025-02-19 05:48:58] === Mulai Proses Rating ===
+[2025-02-19 05:48:58] Session Data: Array
+(
+    [login_user] => Tasya
+    [role] => 3
+    [error] => Data anggota tidak ditemukan
+)
+
+[2025-02-19 05:48:58] POST Data: Array
+(
+    [id_buku] => 7
+    [rating] => 5
+    [ulasan] => bagus
+)
+
+[2025-02-19 05:48:58] ERROR: Data anggota tidak ditemukan

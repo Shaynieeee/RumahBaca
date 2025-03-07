@@ -1,0 +1,211 @@
+[2025-02-19 09:29:03] Memulai proses rating
+[2025-02-19 09:29:03] POST data: Array
+(
+    [id_buku] => 6
+    [rating] => 3
+    [ulasan] => ok
+)
+
+[2025-02-19 09:29:03] SESSION data: Array
+(
+    [login_user] => Tasya
+    [role] => 3
+)
+
+[2025-02-19 09:29:03] Query anggota: SELECT a.id_t_anggota, a.nama 
+                    FROM t_anggota a 
+                    INNER JOIN t_account ac ON a.id_t_account = ac.id_t_account 
+                    WHERE ac.username = 'Tasya'
+[2025-02-19 09:29:03] Error: Data anggota tidak ditemukan
+[2025-02-19 09:52:31] Memulai proses rating
+[2025-02-19 09:52:31] POST data: Array
+(
+    [id_buku] => 6
+    [rating] => 3
+    [ulasan] => ok
+)
+
+[2025-02-19 09:52:31] SESSION data: Array
+(
+    [login_user] => Tasya
+    [role] => 3
+    [error] => Data anggota tidak ditemukan untuk username: Tasya
+)
+
+[2025-02-19 09:52:31] Query anggota: SELECT a.id_t_anggota, a.nama 
+                    FROM t_anggota a 
+                    INNER JOIN t_account ac ON a.id_t_account = ac.id_t_account 
+                    WHERE ac.username = 'Tasya'
+[2025-02-19 09:52:31] Mencoba query alternatif: SELECT id_t_anggota, nama FROM t_anggota WHERE id_t_account = '20'
+[2025-02-19 09:52:31] Error: Data anggota tidak ditemukan
+[2025-02-19 10:03:10] Memulai proses rating
+[2025-02-19 10:03:10] POST data: Array
+(
+    [id_buku] => 6
+    [rating] => 3
+    [ulasan] => ok
+)
+
+[2025-02-19 10:03:10] SESSION data: Array
+(
+    [login_user] => Tasya
+    [role] => 3
+    [error] => Data anggota tidak ditemukan
+)
+
+[2025-02-19 10:03:10] Query anggota: SELECT a.id_t_anggota, a.nama 
+                    FROM t_account ac 
+                    INNER JOIN t_anggota a ON ac.id_t_account = a.id_t_account 
+                    WHERE ac.username = ?
+[2025-02-19 10:03:10] Error: Data anggota tidak ditemukan
+[2025-02-19 10:09:38] Memulai proses rating
+[2025-02-19 10:09:38] POST data: Array
+(
+    [id_buku] => 6
+    [rating] => 3
+    [ulasan] => ok
+)
+
+[2025-02-19 10:09:38] SESSION data: Array
+(
+    [login_user] => Tasya
+    [role] => 3
+    [error] => Data anggota tidak ditemukan
+)
+
+[2025-02-19 10:09:38] Query anggota: SELECT id_t_anggota 
+                    FROM t_account 
+                    WHERE username = ? 
+                    AND id_t_anggota IS NOT NULL
+[2025-02-19 10:09:38] Data anggota ditemukan: Array
+(
+    [id_t_anggota] => 16
+)
+
+[2025-02-19 10:09:38] Mencoba menyimpan rating
+[2025-02-19 10:09:38] Rating berhasil disimpan
+[2025-02-20 03:15:07] Memulai proses rating
+[2025-02-20 03:15:07] POST data: Array
+(
+    [id_buku] => 1
+    [rating] => 1
+    [ulasan] => no
+)
+
+[2025-02-20 03:15:07] SESSION data: Array
+(
+    [login_user] => Tasya
+    [role] => 3
+)
+
+[2025-02-20 03:15:07] Query anggota: SELECT id_t_anggota 
+                    FROM t_account 
+                    WHERE username = ? 
+                    AND id_t_anggota IS NOT NULL
+[2025-02-20 03:15:07] Data anggota ditemukan: Array
+(
+    [id_t_anggota] => 16
+)
+
+[2025-02-20 03:15:07] Mencoba menyimpan rating
+[2025-02-20 03:15:07] Rating berhasil disimpan
+[2025-02-26 03:16:41] Memulai proses rating
+[2025-02-26 03:16:41] POST data: Array
+(
+    [id_buku] => 7
+    [rating] => 3
+    [ulasan] => SIP
+)
+
+[2025-02-26 03:16:41] SESSION data: Array
+(
+    [login_user] => mus
+    [role] => 3
+)
+
+[2025-02-26 03:16:41] Query anggota: SELECT id_t_anggota 
+                    FROM t_account 
+                    WHERE username = ? 
+                    AND id_t_anggota IS NOT NULL
+[2025-02-26 03:16:41] Data anggota ditemukan: Array
+(
+    [id_t_anggota] => 19
+)
+
+[2025-02-26 03:16:41] Mencoba menyimpan rating
+[2025-02-26 03:16:41] Rating berhasil disimpan
+[2025-02-26 04:50:22] Memulai proses rating
+[2025-02-26 04:50:22] POST data: Array
+(
+    [id_buku] => 2
+    [rating] => 5
+    [ulasan] => mantapp
+)
+
+[2025-02-26 04:50:22] SESSION data: Array
+(
+    [login_user] => mus
+    [role] => 3
+)
+
+[2025-02-26 04:50:22] Query anggota: SELECT id_t_anggota 
+                    FROM t_account 
+                    WHERE username = ? 
+                    AND id_t_anggota IS NOT NULL
+[2025-02-26 04:50:22] Data anggota ditemukan: Array
+(
+    [id_t_anggota] => 19
+)
+
+[2025-02-26 04:50:22] Mencoba menyimpan rating
+[2025-02-26 04:50:22] Rating berhasil disimpan
+[2025-03-05 08:23:59] Memulai proses rating
+[2025-03-05 08:23:59] POST data: Array
+(
+    [id_buku] => 7
+    [rating] => 5
+    [ulasan] => WAW
+)
+
+[2025-03-05 08:23:59] SESSION data: Array
+(
+    [login_user] => Tasya
+    [role] => 3
+)
+
+[2025-03-05 08:23:59] Query anggota: SELECT id_t_anggota 
+                    FROM t_account 
+                    WHERE username = ? 
+                    AND id_t_anggota IS NOT NULL
+[2025-03-05 08:23:59] Data anggota ditemukan: Array
+(
+    [id_t_anggota] => 16
+)
+
+[2025-03-05 08:23:59] Mencoba menyimpan rating
+[2025-03-05 08:23:59] Rating berhasil disimpan
+[2025-03-07 05:34:29] Memulai proses rating
+[2025-03-07 05:34:29] POST data: Array
+(
+    [id_buku] => 14
+    [rating] => 5
+    [ulasan] => SIP
+)
+
+[2025-03-07 05:34:29] SESSION data: Array
+(
+    [login_user] => mus
+    [role] => 3
+)
+
+[2025-03-07 05:34:29] Query anggota: SELECT id_t_anggota 
+                    FROM t_account 
+                    WHERE username = ? 
+                    AND id_t_anggota IS NOT NULL
+[2025-03-07 05:34:29] Data anggota ditemukan: Array
+(
+    [id_t_anggota] => 19
+)
+
+[2025-03-07 05:34:29] Mencoba menyimpan rating
+[2025-03-07 05:34:29] Rating berhasil disimpan
