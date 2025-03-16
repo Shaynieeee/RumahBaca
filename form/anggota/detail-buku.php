@@ -120,12 +120,38 @@ include("header_anggota.php");
                             <td><?php echo htmlspecialchars($buku['jenis']); ?></td>
                         </tr>
                         <tr>
-                            <th>Stok</th>
-                            <td><?php echo htmlspecialchars($buku['stok']); ?></td>
-                        </tr>
-                        <tr>
                             <th>Sinopsis</th>
                             <td><?php echo nl2br(htmlspecialchars($buku['sinopsis'])); ?></td>
+                        </tr>
+                        <tr>
+                            <th>Ketersediaan</th>
+                            <td>
+                                <?php if(!empty($buku['file_buku'])): ?>
+                                    <?php if($buku['stok'] > 0): ?>
+                                        <div class="mb-2">
+                                            <span class="badge badge-success">Tersedia Offline</span>
+                                            <span class="badge badge-info ml-2">Tersedia Online</span>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-book mr-1"></i>Stok: <?php echo $buku['stok']; ?> buku
+                                        </small>
+                                    <?php else: ?>
+                                        <span class="badge badge-info">Tersedia Hanya Online</span>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <?php if($buku['stok'] > 0): ?>
+                                        <div>
+                                            <span class="badge badge-success">Tersedia Offline</span>
+                                            <br>
+                                            <small class="text-muted mt-2 d-block">
+                                                <i class="fas fa-book mr-1"></i>Stok: <?php echo $buku['stok']; ?> buku
+                                            </small>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="badge badge-danger">Tidak Tersedia</span>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                     </table>
 

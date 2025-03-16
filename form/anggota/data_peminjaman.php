@@ -115,6 +115,7 @@ $result_history = mysqli_stmt_get_result($stmt_history);
                                 <th>Tanggal Kembali</th>
                                 <th>Qty</th>
                                 <th>Kondisi</th>
+                                <th>Status</th>
                                 <th>Denda</th>
                             </tr>
                         </thead>
@@ -130,6 +131,7 @@ $result_history = mysqli_stmt_get_result($stmt_history);
                                 echo "<td>".date('d-m-Y', strtotime($row['tanggal_kembali']))."</td>";
                                 echo "<td>".$row['qty']."</td>";
                                 echo "<td>".$row['kondisi']."</td>";
+                                echo "<td><span class='label label-success'>".$row['status']."</span></td>";
                                 echo "<td>Rp. ".number_format($row['denda'],0,',','.')."</td>";
                                 echo "</tr>";
                                 $no++;

@@ -406,7 +406,7 @@ include("header.php");
 		<div class="col-lg-12">
 			<div class="card">
 				<div class="card-body">
-					<form action="" method="post" enctype="multipart/form-data">
+					<form method="post" action="" enctype="multipart/form-data">
 						<div class="row">
 							<div class="col-md-8">
 								<div class="form-group">
@@ -451,9 +451,31 @@ include("header.php");
 								</div>
 								
 								<div class="form-group">
+									<label>Ketersediaan Buku</label>
+									<select name="ketersediaan" id="ketersediaan" class="form-control" required>
+										<option value="">Pilih Ketersediaan</option>
+										<option value="online">Online</option>
+										<option value="offline">Offline</option>
+										<option value="both">Online & Offline</option>
+									</select>
+								</div>
+								
+								<div class="form-group offline-field">
 									<label>Stok</label>
-									<input type="number" name="stok" class="form-control" required
-										   value="<?php echo $buku ? htmlspecialchars($buku['stok']) : ''; ?>">
+									<input type="number" class="form-control" name="stok" id="stok" 
+										   value="<?php echo isset($buku['stok']) ? $buku['stok'] : ''; ?>">
+								</div>
+								
+								<div class="form-group offline-field">
+									<label>Harga</label>
+									<input type="number" class="form-control" name="harga" id="harga" 
+										   value="<?php echo isset($buku['harga']) ? $buku['harga'] : ''; ?>">
+								</div>
+								
+								<div class="form-group offline-field">
+									<label>Kode Rak</label>
+									<input type="text" class="form-control" name="kode_rak" id="kode_rak" 
+										   value="<?php echo isset($buku['kode_rak']) ? $buku['kode_rak'] : ''; ?>">
 								</div>
 								
 								<div class="form-group">
@@ -472,43 +494,22 @@ include("header.php");
 											 alt="Cover buku">
 									<?php endif; ?>
 									<div class="input-group">
-										<input type="file" name="gambar" class="form-control" 
-											   accept=".jpg,.jpeg,.png">
+										<input type="file" name="gambar" class="form-control" accept="image/*">
+										<input type="hidden" name="id_t_buku" value="<?php echo $buku['id_t_buku']; ?>">
 									</div>
 									<small class="form-text text-muted">
 										Format: JPG, JPEG, PNG. Maksimal 2MB
 									</small>
 								</div>
 								
-								<div class="form-group">
-									<label>File Buku (PDF Only)</label>
-									<?php if($buku && $buku['file_buku']): ?>
-										<div class="alert alert-success mb-2">
-											<i class="fa fa-check"></i> PDF sudah diupload
-										</div>
+								<div class="form-group online-field">
+									<label>File PDF</label>
+									<input type="file" class="form-control" name="file_buku" id="file_buku" accept=".pdf">
+									<?php if(isset($buku['file_buku']) && !empty($buku['file_buku'])): ?>
+										<p class="help-block">File saat ini: <?php echo $buku['file_buku']; ?></p>
 									<?php endif; ?>
-									<div class="input-group">
-										<input type="file" name="file_buku" class="form-control" 
-											   accept=".pdf">
-									</div>
-									<small class="form-text text-muted">
-										Format: PDF. Maksimal 10MB
-									</small>
 								</div>
 							</div>
-						</div>
-						
-						<div class="form-group">
-							<label>Harga</label>
-							<input type="number" name="harga" class="form-control" required 
-								   value="<?php echo $buku ? htmlspecialchars($buku['harga']) : '0'; ?>">
-						</div>
-
-						<div class="form-group">
-							<label>Kode Rak</label>
-							<input type="text" name="kode_rak" class="form-control" required maxlength="3"
-								   value="<?php echo $buku ? htmlspecialchars($buku['kode_rak']) : ''; ?>">
-							<small class="form-text text-muted">Maksimal 3 karakter</small>
 						</div>
 						
 						<div class="form-group">
@@ -597,9 +598,31 @@ include("header.php");
 <!-- Tambahkan script ini di bagian JavaScript -->
 <script>
 $(document).ready(function() {
-    $('form').on('submit', function() {
-        $('#debugInfo').show();
-    });
+    function toggleFields() {
+        var ketersediaan = $('#ketersediaan').val();
+        
+        // Sembunyikan semua field terlebih dahulu
+        $('.offline-field, .online-field').hide();
+        
+        // Tampilkan field sesuai pilihan
+        if (ketersediaan === 'online') {
+            $('.online-field').show();
+            // Reset nilai field offline
+            $('.offline-field input').val('');
+        } 
+        else if (ketersediaan === 'offline') {
+            $('.offline-field').show();
+            // Reset nilai field online
+            $('.online-field input').val('');
+        }
+        else if (ketersediaan === 'both') {
+            $('.offline-field, .online-field').show();
+        }
+    }
+
+    // Jalankan saat halaman dimuat dan saat select berubah
+    $('#ketersediaan').change(toggleFields);
+    toggleFields();
 });
 </script>
 

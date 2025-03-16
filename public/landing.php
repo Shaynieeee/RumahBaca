@@ -22,20 +22,53 @@ include $root . '/setting/koneksi.php';
     <!-- Custom CSS -->
     <style>
         .hero-section {
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
-                        url('https://source.unsplash.com/1600x900/?library');
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('assets/bg-library.webp');
             background-size: cover;
             background-position: center;
-            min-height: 500px;
-            color: white;
-            padding: 100px 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 0;
+        }
+        
+        .hero-content {
+            text-align: center;
+            color: #ffffff;
+        }
+        
+        .hero-section h1 {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 4rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+        
+        .hero-section p {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 1.5rem;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+        
+        .hero-content {
+            background-color: rgba(0, 0, 0, 0.4);
+            padding: 30px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
         }
         
         .search-box {
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin-top: 30px;
         }
         
         .book-card {
@@ -58,16 +91,63 @@ include $root . '/setting/koneksi.php';
             background: #e9ecef;
             cursor: pointer;
         }
+
+        .navbar {
+            background-color: #2c3e50;
+            padding: 15px 0;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+
+        .brand-logo {
+            height: 40px;
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .brand-text {
+            color: #ffffff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* .navbar-nav .nav-link {
+            color: #ecf0f1;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0 10px;
+        } */
+
+        /* .navbar-nav .nav-link:hover {
+            color: #3498db;
+        } */
+
+        .btn-login {
+            background-color: #3498db;
+            color: #ffffff;
+            padding: 8px 20px;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+
+        .btn-login:hover {
+            background-color: #2980b9;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg">
     <div class="container">
         <a class="navbar-brand" href="#">
-        <img src="../public/assets/pelindo-logo.png" alt="Logo Pelindo" height="30" class="d-inline-block align-middle me-2">
-         Rumah Baca
+            <img src="assets/logo-rumahbaca.png" alt="Logo" class="brand-logo">
+            <span class="brand-text">Rumah Baca</span>
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>

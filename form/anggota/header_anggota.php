@@ -34,8 +34,27 @@ if(!isset($_SESSION['login_user'])) {
         }
         
         .navbar-brand {
-            font-size: 1.5rem;
-            color: white !important;
+            display: flex;
+            align-items: center;
+            padding: 15px;
+        }
+        
+        .brand-logo {
+            height: 40px;
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .brand-text {
+            color: #ffffff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .navbar-default .navbar-brand:hover {
+            color: #f8f9fa;
         }
         
         .nav-link {
@@ -47,7 +66,7 @@ if(!isset($_SESSION['login_user'])) {
         }
         
         .hero-section {
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('../../assets/img/library-bg.jpg');
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../public/assets/bg-library.webp');
             background-size: cover;
             background-position: center;
             padding: 100px 0;
@@ -77,16 +96,54 @@ if(!isset($_SESSION['login_user'])) {
             margin-top: -50px;
             position: relative;
         }
+
+        .dashboard-header {
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../assets/bg-library.jpg');
+            background-size: cover;
+            background-position: center;
+            padding: 100px 0;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-header h1 {
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #wrapper {
+            background-color: #2c3e50;
+        }
+
+        .sidebar {
+            background-color: #2c3e50;
+        }
+
+        .sidebar ul li a {
+            color: #ecf0f1;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        .sidebar ul li a:hover {
+            background-color: #34495e;
+            color: #ffffff;
+        }
+
+        .sidebar ul li.active a {
+            background-color: #3498db;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-lg">
     <div class="container">
-        <a class="navbar-brand" href="dashboard.php">
-            <img src="../../public/assets/pelindo-logo.png" alt="Logo Pelindo" height="30" class="d-inline-block align-middle me-2">
-            Rumah Baca
-        </a>
+        <div class="navbar-header">
+            <a class="navbar-brand" href="index.php">
+                <img src="../../public/assets/logo-rumahbaca.png" alt="Logo" class="brand-logo">
+                <span class="brand-text">Rumah Baca</span>
+            </a>
+        </div>
         
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>

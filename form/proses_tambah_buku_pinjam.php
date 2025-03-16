@@ -107,5 +107,121 @@ if(isset($_POST['submit'])) {
     $response['message'] = 'Invalid request';
 }
 
+// Jika ini adalah permintaan pencarian buku
+if(isset($_GET['action']) && $_GET['action'] == 'search') {
+    $keyword = mysqli_real_escape_string($db, $_GET['keyword']);
+    
+    $sql = "SELECT id_t_buku, nama_buku, penulis, stok 
+            FROM t_buku 
+            WHERE (nama_buku LIKE ? OR penulis LIKE ?) 
+            AND stok > 0 
+            AND status = 'Aktif'";
+            
+    $stmt = mysqli_prepare($db, $sql);
+    $param = "%$keyword%";
+    mysqli_stmt_bind_param($stmt, "ss", $param, $param);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    
+    if(mysqli_num_rows($result) > 0) {
+        echo '<div class="list-group">';
+        while($row = mysqli_fetch_assoc($result)) {
+            echo '<a href="javascript:void(0)" class="list-group-item" 
+                    onclick="pilihBuku('.$row['id_t_buku'].',\''.addslashes($row['nama_buku']).'\',\''.addslashes($row['penulis']).'\')">';
+            echo '<div class="d-flex justify-content-between">';
+            echo '<div><strong>'.$row['nama_buku'].'</strong><br>';
+            echo '<small class="text-muted">Penulis: '.$row['penulis'].'</small></div>';
+            echo '<span class="badge badge-info">Stok: '.$row['stok'].'</span>';
+            echo '</div></a>';
+        }
+        echo '</div>';
+    } else {
+        echo '<div class="list-group-item">Tidak ada buku yang ditemukan</div>';
+    }
+    exit; // Penting! Keluar agar tidak menjalankan kode di bawah
+}
+
+// Jika bukan permintaan pencarian, tampilkan form pencarian buku
+?>
+
+<div class="form-group">
+    <div class="row">
+        <div class="col-md-8">
+            <input type="text" class="form-control" id="check" placeholder="Ketik judul buku...">
+            <div id="hasilPencarian" style="position: absolute; width: 100%; z-index: 1000; display: none;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Form untuk buku yang dipilih -->
+<div id="formJumlahBuku" style="display: none;" class="form-group">
+    <div class="row">
+        <div class="col-md-6">
+            <label>Judul Buku yang Dipilih:</label>
+            <p id="judulBukuDipilih" class="form-control-static"></p>
+            <input type="hidden" id="idBukuDipilih">
+            <input type="hidden" id="penulisBukuDipilih">
+        </div>
+        <div class="col-md-2">
+            <label>Jumlah:</label>
+            <input type="number" class="form-control" id="qty" value="1" min="1">
+        </div>
+        <div class="col-md-2">
+            <label>&nbsp;</label><br>
+            <button type="button" class="btn btn-primary" onclick="tambahKeDaftar()">
+                <i class="fa fa-plus"></i> Tambah
+            </button>
+        </div>
+    </div>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>Judul Buku</th>
+            <th>Jumlah</th>
+            <th>Aksi</th>
+            <th style="display:none;">Hidden</th>
+        </tr>
+    </thead>
+    <tbody id="daftar_buku">
+        <!-- Data buku akan ditampilkan di sini -->
+    </tbody>
+</table>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    // Fungsi untuk menampilkan hasil pencarian
+    $('#check').keyup(function() {
+        var keyword = $(this).val();
+        
+        if(keyword.length > 0) {
+            $.ajax({
+                url: 'proses_tambah_buku_pinjam.php',
+                type: 'GET',
+                data: {
+                    action: 'search',
+                    keyword: keyword
+                },
+                success: function(data) {
+                    $('#hasilPencarian').html(data).show();
+                }
+            });
+        } else {
+            $('#hasilPencarian').hide();
+        }
+    });
+
+    // Sembunyikan dropdown saat klik di luar
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#check, #hasilPencarian').length) {
+            $('#hasilPencarian').hide();
+        }
+    });
+});
+</script>
+
+<?php
 echo json_encode($response);
 ?> 

@@ -209,3 +209,50 @@
 
 [2025-03-07 05:34:29] Mencoba menyimpan rating
 [2025-03-07 05:34:29] Rating berhasil disimpan
+[2025-03-11 05:03:05] Memulai proses rating
+[2025-03-11 05:03:05] POST data: Array
+(
+    [id_buku] => 18
+    [rating] => 4
+    [ulasan] => OK
+)
+
+[2025-03-11 05:03:05] SESSION data: Array
+(
+    [captcha_text] => 9406
+    [login_user] => min
+    [role] => 1
+)
+
+[2025-03-11 05:03:05] Query anggota: SELECT id_t_anggota 
+                    FROM t_account 
+                    WHERE username = ? 
+                    AND id_t_anggota IS NOT NULL
+[2025-03-11 05:03:05] Error: Data anggota tidak ditemukan
+[2025-03-11 05:03:39] Memulai proses rating
+[2025-03-11 05:03:39] POST data: Array
+(
+    [id_buku] => 16
+    [rating] => 4
+    [ulasan] => Bagus
+)
+
+[2025-03-11 05:03:39] SESSION data: Array
+(
+    [captcha_text] => 9406
+    [login_user] => mus
+    [role] => 3
+    [error] => Data anggota tidak ditemukan
+)
+
+[2025-03-11 05:03:39] Query anggota: SELECT id_t_anggota 
+                    FROM t_account 
+                    WHERE username = ? 
+                    AND id_t_anggota IS NOT NULL
+[2025-03-11 05:03:39] Data anggota ditemukan: Array
+(
+    [id_t_anggota] => 19
+)
+
+[2025-03-11 05:03:39] Mencoba menyimpan rating
+[2025-03-11 05:03:39] Rating berhasil disimpan

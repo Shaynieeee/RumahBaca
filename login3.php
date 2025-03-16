@@ -5,8 +5,9 @@
    $error = "";
 
    // Generate CAPTCHA jika belum ada
-   if (!isset($_SESSION['captcha_text'])) {
-       $_SESSION['captcha_text'] = rand(1000, 9999);
+   if (!isset($_SESSION['captcha'])) {
+       $_SESSION['captcha'] = rand(10, 99) . " + " . rand(1, 9);
+       $_SESSION['captcha_result'] = eval("return " . str_replace(" ", "", $_SESSION['captcha']) . ";");
    }
    
    if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -15,7 +16,7 @@
       $captcha_input = $_POST['captcha'];
       
       // Periksa CAPTCHA
-      if ($captcha_input != $_SESSION['captcha_text']) {
+      if ($captcha_input != $_SESSION['captcha_result']) {
           $error = "CAPTCHA salah, coba lagi.";
       } else {
           $sql = "SELECT a.*, r.nama_role, COALESCE(s.status, m.status) as user_status 
@@ -49,7 +50,8 @@
       }
       
       // Reset CAPTCHA setelah pengiriman form
-      $_SESSION['captcha_text'] = rand(1000, 9999);
+      $_SESSION['captcha'] = rand(10, 99) . " + " . rand(1, 9);
+      $_SESSION['captcha_result'] = eval("return " . str_replace(" ", "", $_SESSION['captcha']) . ";");
    }
 ?>
 <!DOCTYPE html>
@@ -78,11 +80,8 @@
                     <div class="mb-3">
                         <input type="password" class="form-control" placeholder="Password" name="password" required>
                     </div>
-                    <div class="mb-3 text-center">
-                        <label class="form-label">CAPTCHA:</label>
-                        <div class="p-2 mb-2" style="display: inline-block; font-size: 24px; font-weight: bold; color: #fff; background-color: #007bff; border-radius: 5px;">
-                            <?php echo $_SESSION['captcha_text']; ?>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">CAPTCHA: <?php echo $_SESSION['captcha']; ?> = ?</label>
                         <input type="number" class="form-control" name="captcha" required>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Login</button>

@@ -63,6 +63,16 @@ include("header_anggota.php");
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <select name="txtKetersediaan" class="form-control">
+                                        <option value="">Semua Ketersediaan</option>
+                                        <option value="online" <?php echo (isset($_GET['txtKetersediaan']) && $_GET['txtKetersediaan'] == 'online') ? 'selected' : ''; ?>>Buku Online</option>
+                                        <option value="offline" <?php echo (isset($_GET['txtKetersediaan']) && $_GET['txtKetersediaan'] == 'offline') ? 'selected' : ''; ?>>Buku Offline</option>
+                                        <option value="both" <?php echo (isset($_GET['txtKetersediaan']) && $_GET['txtKetersediaan'] == 'both') ? 'selected' : ''; ?>>Online & Offline</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="col-md-2">
                                 <button type="submit" class="btn btn-primary btn-block">
                                     <i class="fa fa-search"></i> Cari
@@ -85,6 +95,19 @@ include("header_anggota.php");
         }
         if(isset($_GET['txtKategori']) && !empty($_GET['txtKategori'])) {
             $where .= " AND jenis = '".mysqli_real_escape_string($db, $_GET['txtKategori'])."'";
+        }
+        if(isset($_GET['txtKetersediaan']) && !empty($_GET['txtKetersediaan'])) {
+            switch($_GET['txtKetersediaan']) {
+                case 'online':
+                    $where .= " AND file_buku IS NOT NULL AND file_buku != '' ";
+                    break;
+                case 'offline':
+                    $where .= " AND stok > 0 ";
+                    break;
+                case 'both':
+                    $where .= " AND ((file_buku IS NOT NULL AND file_buku != '') AND stok > 0) ";
+                    break;
+            }
         }
 
         // Pagination
@@ -110,6 +133,22 @@ include("header_anggota.php");
                                                     <i class="fa fa-calendar"></i> <?php echo htmlspecialchars($row['tahun_terbit'] ?? 'Tidak ada tahun'); ?>
                                                 </small>
                                             </p>
+                                            <div class="mt-2">
+                                                <?php if(!empty($row['file_buku'])): ?>
+                                                    <?php if($row['stok'] > 0): ?>
+                                                        <span class="badge badge-success">Tersedia Offline</span>
+                                                        <span class="badge badge-info">Tersedia Online</span>
+                                                    <?php else: ?>
+                                                        <span class="badge badge-info">Tersedia Hanya Online</span>
+                                                    <?php endif; ?>
+                                                <?php else: ?>
+                                                    <?php if($row['stok'] > 0): ?>
+                                                        <span class="badge badge-success">Tersedia Offline</span>
+                                                    <?php else: ?>
+                                                        <span class="badge badge-danger">Tidak Tersedia</span>
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
+                                            </div>
                                             <div class="btn-group mt-auto w-100">
                                                 <a href="detail-buku.php?id=<?php echo $row['id_t_buku']; ?>" 
                                                    class="btn btn-info btn-sm">
@@ -141,6 +180,7 @@ include("header_anggota.php");
                     echo "<a class='page-link' href='?page=$i";
                     if(isset($_GET['txtJudul'])) echo "&txtJudul=".urlencode($_GET['txtJudul']);
                     if(isset($_GET['txtKategori'])) echo "&txtKategori=".urlencode($_GET['txtKategori']);
+                    if(isset($_GET['txtKetersediaan'])) echo "&txtKetersediaan=".urlencode($_GET['txtKetersediaan']);
                     echo "'>$i</a></li>";
                 }
                 echo '</ul>';
@@ -172,6 +212,21 @@ include("header_anggota.php");
 
 .pagination {
     margin-top: 2rem;
+}
+
+.badge {
+    padding: 6px 10px;
+    margin: 2px;
+    font-size: 12px;
+}
+.badge-success {
+    background-color: #28a745;
+}
+.badge-info {
+    background-color: #17a2b8;
+}
+.badge-danger {
+    background-color: #dc3545;
 }
 </style>
 

@@ -4,68 +4,61 @@ require_once 'setting/koneksi.php';
 $error = "";
 $success = "";
 
+session_start();
+
+if (!isset($_SESSION['captcha_code'])) {
+    $_SESSION['captcha_code'] = rand(1000, 9999);
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = mysqli_real_escape_string($db, $_POST['username']);
-    $password = $_POST['password'];
+    $username = !empty($_POST['username']) ? mysqli_real_escape_string($db, $_POST['username']) : null;
+    $password = !empty($_POST['password']) ? $_POST['password'] : null;
     $nama = mysqli_real_escape_string($db, $_POST['nama']);
     $no_telp = mysqli_real_escape_string($db, $_POST['no_telp']);
+    $email = mysqli_real_escape_string($db, $_POST['email']);
     $alamat = mysqli_real_escape_string($db, $_POST['alamat']);
     $jenis_kelamin = mysqli_real_escape_string($db, $_POST['jenis_kelamin']);
     $tgl_lahir = $_POST['tgl_lahir'];
+    $captcha_input = $_POST['captcha'];
     
-    // Validasi
-    if (strlen($password) < 8) {
+    if ($captcha_input != $_SESSION['captcha_code']) {
+        $error = "Kode CAPTCHA salah.";
+    } elseif (!is_null($password) && strlen($password) < 8) {
         $error = "Password minimal 8 karakter";
     } else {
-        // Begin transaction
         mysqli_begin_transaction($db);
         try {
-            // Generate no_anggota (AGT + YYYYMMDD + 3 digit)
             $today = date('Ymd');
-            $query = "SELECT MAX(SUBSTRING(no_anggota, 12)) as max_num 
-                     FROM t_anggota 
-                     WHERE SUBSTRING(no_anggota, 4, 8) = '$today'";
+            $query = "SELECT MAX(SUBSTRING(no_anggota, 12)) as max_num FROM t_anggota WHERE SUBSTRING(no_anggota, 4, 8) = '$today'";
             $result = mysqli_query($db, $query);
             $row = mysqli_fetch_assoc($result);
             $next_num = str_pad(($row['max_num'] ?? 0) + 1, 3, '0', STR_PAD_LEFT);
             $no_anggota = "AGT" . $today . $next_num;
             
-            // Insert ke t_anggota
-            $sql_anggota = "INSERT INTO t_anggota (no_anggota, nama, tgl_daftar, tgl_lahir, 
-                           jenis_kelamin, no_telp, alamat, status, create_date, create_by) 
-                           VALUES (?, ?, CURDATE(), ?, ?, ?, ?, 'Aktif', CURDATE(), ?)";
+            $sql_anggota = "INSERT INTO t_anggota (no_anggota, nama, tgl_daftar, tgl_lahir, jenis_kelamin, no_telp, email, alamat, status, create_date, create_by) VALUES (?, ?, CURDATE(), ?, ?, ?, ?, ?, 'Aktif', CURDATE(), ?)";
             $stmt_anggota = mysqli_prepare($db, $sql_anggota);
-            mysqli_stmt_bind_param($stmt_anggota, "sssssss", 
-                                 $no_anggota, $nama, $tgl_lahir, $jenis_kelamin, 
-                                 $no_telp, $alamat, $username);
+            mysqli_stmt_bind_param($stmt_anggota, "ssssssss", $no_anggota, $nama, $tgl_lahir, $jenis_kelamin, $no_telp, $email, $alamat, $username);
             mysqli_stmt_execute($stmt_anggota);
             $id_t_anggota = mysqli_insert_id($db);
             
-            // Hash password
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            if (!is_null($password)) {
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                
+                $sql_account = "INSERT INTO t_account (id_p_role, id_t_anggota, username, password, create_date, create_by) VALUES (3, ?, ?, ?, NOW(), ?)";
+                $stmt_account = mysqli_prepare($db, $sql_account);
+                mysqli_stmt_bind_param($stmt_account, "isss", $id_t_anggota, $username, $hashed_password, $username);
+                mysqli_stmt_execute($stmt_account);
+            }
             
-            // Insert ke t_account
-            $sql_account = "INSERT INTO t_account (id_p_role, id_t_anggota, username, password, 
-                          create_date, create_by) 
-                          VALUES (3, ?, ?, ?, NOW(), ?)";
-            $stmt_account = mysqli_prepare($db, $sql_account);
-            mysqli_stmt_bind_param($stmt_account, "isss", 
-                                 $id_t_anggota, $username, $hashed_password, $username);
-            mysqli_stmt_execute($stmt_account);
-            
-            // Commit transaction
             mysqli_commit($db);
             $success = "Registrasi berhasil! Silahkan login.";
-            
-            // Redirect ke login setelah 2 detik
             header("refresh:2;url=login.php");
-            
         } catch (Exception $e) {
-            // Rollback jika terjadi error
             mysqli_rollback($db);
             $error = "Gagal mendaftar: " . $e->getMessage();
         }
     }
+    $_SESSION['captcha_code'] = rand(1000, 9999);
 }
 ?>
 
@@ -75,34 +68,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | Rumah Baca</title>
-    
-          <!-- Multiple favicon sizes -->
-          <link rel="icon" type="image/png" sizes="32x32" href="public/assets/pelindo-logo.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="public/assets/pelindo-logo.png">
-    <link rel="shortcut icon" href="public/assets/pelindo-logo.png">
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
         body {
-            background-image: linear-gradient(135deg, #1d99ff, #fff);
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            min-height: 100vh;
         }
         .register-form {
             background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
             margin-top: 50px;
+        }
+        .captcha-box {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            background: #f8f9fa;
+            padding: 10px;
+            display: inline-block;
+            border-radius: 5px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <div class="register-form">
                     <h2 class="text-center mb-4">Register Anggota</h2>
                     
@@ -115,29 +109,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <?php endif; ?>
                     
                     <form method="post" action="">
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" name="username" class="form-control" required autocomplete="off">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" name="password" class="form-control" 
-                                   required minlength="8"  autocomplete="off">
-                            <small class="text-muted">Minimal 8 karakter</small>
-                        </div>
-                        
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label>Nama Lengkap</label>
-                            <input type="text" name="nama" class="form-control" required  autocomplete="off">
+                            <input type="text" name="nama" class="form-control" required autocomplete="off">
                         </div>
-                        
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label>Tanggal Lahir</label>
-                            <input type="date" name="tgl_lahir" class="form-control" required autocomplete="off">
+                            <input type="date" name="tgl_lahir" class="form-control" required>
                         </div>
-                        
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label>Jenis Kelamin</label>
                             <select name="jenis_kelamin" class="form-control" required>
                                 <option value="">Pilih Jenis Kelamin</option>
@@ -145,20 +125,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <option value="Perempuan">Perempuan</option>
                             </select>
                         </div>
-                        
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label>No. Telepon</label>
-                            <input type="tel" name="no_telp" class="form-control" required autocomplete="off">
+                            <input type="tel" name="no_telp" class="form-control" required>
                         </div>
-                        
-                        <div class="form-group">
+                        <div class="mb-3">
+                            <label>Email</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
                             <label>Alamat</label>
                             <textarea name="alamat" class="form-control" rows="3" required></textarea>
                         </div>
-                        
-                        <button type="submit" class="btn btn-primary btn-block">Register</button>
+                        <div class="mb-3">
+                            <label>Username</label>
+                            <input type="text" name="username" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>Password</label>
+                            <input type="password" name="password" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>Captcha</label><br>
+                            <span class="captcha-box"><?php echo $_SESSION['captcha_code']; ?></span>
+                            <input type="text" name="captcha" class="form-control mt-2" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Register</button>
                     </form>
-                    
                     <div class="text-center mt-3">
                         Sudah punya akun? <a href="login.php">Login di sini</a>
                     </div>
@@ -166,9 +159,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
         </div>
     </div>
-
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -87,7 +87,7 @@ mysqli_query($db, $update_status);
 					<tr>
 						<th>No</th>
 						<th>No Peminjaman</th>
-						<th>No Anggota</th>
+						<th>Nama Anggota</th>
 						<th>Staff</th>
 						<th>Tanggal Pinjam</th>
 						<th>Tanggal Kembali</th>
@@ -104,7 +104,7 @@ mysqli_query($db, $update_status);
 				$max_results = 10;
 				$from = (($page * $max_results) - $max_results);
 
-				$sql = "SELECT p.*, s.nama as nama_staff, a.no_anggota,
+				$sql = "SELECT p.*, s.nama as nama_staff, a.no_anggota, a.nama as nama_anggota,
 						(SELECT COUNT(DISTINCT id_t_buku) 
 						 FROM t_detil_pinjam 
 						 WHERE id_t_peminjaman = p.id_t_peminjaman) as jum_buku,
@@ -131,7 +131,7 @@ mysqli_query($db, $update_status);
 						<tr>
 							<td><?php echo $no++; ?></td>
 							<td><?php echo $row['no_peminjaman']; ?></td>
-							<td><?php echo $row['no_anggota']; ?></td>
+							<td><?php echo htmlspecialchars($row['nama_anggota']); ?></td>
 							<td><?php 
 								// Cek apakah ada id_t_staff
 								if (!empty($row['id_t_staff'])) {

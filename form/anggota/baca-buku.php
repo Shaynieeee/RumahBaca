@@ -83,9 +83,12 @@ include("header_anggota.php");
                 </button>
             </div>
             <div class="right-controls">
-                <a href="data_buku.php" class="btn btn-secondary">
-                    <i class="fa fa-times"></i> Tutup
-                </a>
+                <form method="POST" id="formTutup">
+                    <input type="hidden" name="current_page" id="current_page" value="1">
+                    <a href="data_buku.php" class="btn btn-secondary" onclick="selesaiBaca()">
+                        <i class="fa fa-times"></i> Tutup
+                    </a>
+                </form>
             </div>
         </div>
 
@@ -494,18 +497,93 @@ pdfjsLib.getDocument('../../image/buku/<?php echo htmlspecialchars($buku['file_b
         console.error('Error loading PDF:', error);
     });
 
-// Fungsi untuk mencatat waktu selesai
+// Update current_page saat navigasi halaman
+document.getElementById('prevPage').addEventListener('click', function() {
+    document.getElementById('current_page').value = pageNum;
+});
+
+document.getElementById('nextPage').addEventListener('click', function() {
+    document.getElementById('current_page').value = pageNum;
+});
+
+// Update current_page saat input halaman berubah
+document.getElementById('pageNumber').addEventListener('change', function() {
+    let num = parseInt(this.value);
+    if (num >= 1 && num <= pdfDoc.numPages) {
+        document.getElementById('current_page').value = num;
+    }
+});
+
+// Update fungsi selesaiBaca di baca-buku.php
 function selesaiBaca() {
+    const currentPage = pageNum; // Menggunakan pageNum langsung dari PDF viewer
     fetch('proses_selesai_baca.php?id_buku=<?php echo $id_buku; ?>', {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'halaman_terakhir=' + currentPage
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Halaman terakhir tersimpan:', data.halaman_terakhir);
+    })
+    .catch(error => {
+        console.error('Error:', error);
     });
 }
 
-// Panggil fungsi selesaiBaca saat window ditutup
-window.addEventListener('beforeunload', selesaiBaca);
+// Update event listener untuk tombol tutup
+document.querySelector('.right-controls .btn-secondary').addEventListener('click', function(e) {
+    e.preventDefault();
+    selesaiBaca();
+    window.location.href = 'data_buku.php';
+});
 
-// Panggil fungsi selesaiBaca saat tombol kembali ditekan
-window.addEventListener('popstate', selesaiBaca);
+// Tambahkan event listener untuk update halaman
+document.getElementById('pageNumber').addEventListener('change', function() {
+    let num = parseInt(this.value);
+    if (num >= 1 && num <= pdfDoc.numPages) {
+        pageNum = num;
+        document.getElementById('current_page').value = pageNum;
+    }
+});
+
+// Update halaman saat navigasi
+document.getElementById('prevPage').addEventListener('click', function() {
+    if (pageNum > 1) {
+        pageNum--;
+        document.getElementById('current_page').value = pageNum;
+    }
+});
+
+document.getElementById('nextPage').addEventListener('click', function() {
+    if (pageNum < pdfDoc.numPages) {
+        pageNum++;
+        document.getElementById('current_page').value = pageNum;
+    }
+});
 </script>
 
-<?php include "footer.php"; ?> 
+<?php include "footer.php"; ?>
+
+<?php
+// Tambahkan query update halaman terakhir di proses_selesai_baca.php
+if(isset($_POST['halaman_terakhir'])) {
+    $halaman_terakhir = (int)$_POST['halaman_terakhir'];
+    
+    $sql_update = "UPDATE t_riwayat_baca 
+                   SET halaman_terakhir = ?
+                   WHERE id_t_anggota = ? 
+                   AND id_t_buku = ? 
+                   AND waktu_selesai IS NULL";
+    
+    $stmt = mysqli_prepare($db, $sql_update);
+    mysqli_stmt_bind_param($stmt, "iii", 
+        $halaman_terakhir,
+        $anggota['id_t_anggota'],
+        $id_buku
+    );
+    mysqli_stmt_execute($stmt);
+}
+?> 

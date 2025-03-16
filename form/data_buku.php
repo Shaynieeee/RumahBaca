@@ -126,22 +126,13 @@
 						<td><?php echo $no;?></td>
 						<td>
 							<?php if(!empty($tampil['gambar'])): ?>
-								<?php 
-									// Cek apakah nama file sudah termasuk ekstensi
-									$gambar = $tampil['gambar'];
-									if (!preg_match('/\.(jpg|jpeg|png)$/i', $gambar)) {
-										// Jika tidak ada ekstensi, tambahkan .jpg sebagai default
-										$gambar .= '.jpg';
-									}
-									$image_path = '../image/buku/' . htmlspecialchars($gambar);
-								?>
-								<img src="<?php echo $image_path; ?>" 
-									 alt="Cover <?php echo htmlspecialchars($tampil['nama_buku']); ?>"
-									 style="max-width: 100px; height: auto;"
-									 onerror="this.onerror=null; this.src='../image/no-cover.jpg';">
+								<img src="../image/buku/<?php echo htmlspecialchars($tampil['gambar']); ?>?v=<?php echo time(); ?>" 
+									 alt="Cover" 
+									 class="img-thumbnail" 
+									 style="max-height: 80px; max-width: 60px;"
+									 onerror="this.onerror=null; this.src='../image/buku/default.jpg'; console.error('Error loading image: <?php echo htmlspecialchars($tampil['gambar']); ?>');">
 							<?php else: ?>
-								<img src="../image/no-cover.jpg" alt="No cover available" 
-									 style="max-width: 100px; height: auto;">
+								<span>No Cover</span>
 							<?php endif; ?>
 						</td>
 						<td><?php echo $tampil['nama_buku']; ?></td>
