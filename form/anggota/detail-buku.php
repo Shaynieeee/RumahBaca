@@ -29,6 +29,19 @@ if(!$buku) {
     exit();
 }
 
+// Ambil data anggota yang login untuk cek akses download
+$username = $_SESSION['login_user'];
+$sql_anggota = "SELECT a.* FROM t_anggota a 
+                JOIN t_account acc ON a.id_t_anggota = acc.id_t_anggota 
+                WHERE acc.username = ?";
+$stmt_anggota = mysqli_prepare($db, $sql_anggota);
+mysqli_stmt_bind_param($stmt_anggota, "s", $username);
+mysqli_stmt_execute($stmt_anggota);
+$result_anggota = mysqli_stmt_get_result($stmt_anggota);
+$anggota = mysqli_fetch_assoc($result_anggota);
+$id_anggota = $anggota['id_t_anggota'];
+$allow_download = $anggota['allow_download'] ?? 0;
+
 include("header_anggota.php");
 ?>
 
@@ -36,7 +49,26 @@ include("header_anggota.php");
     <div class="row">
         <div class="col-md-4">
             <div class="card">
-                <img src="../../image/buku/<?php echo htmlspecialchars($buku['gambar']); ?>" 
+                <?php
+                // Cari file gambar yang sesuai
+                $gambar_id = $buku['gambar'] ?? '';
+                $gambar_path = "../../image/buku/default.jpg"; // Default image
+                
+                if(!empty($gambar_id)) {
+                    // Coba cari file dengan pola nama yang sesuai
+                    $files = glob("../../image/buku/{$gambar_id}*");
+                    if(!empty($files)) {
+                        $gambar_path = $files[0]; // Ambil file pertama yang ditemukan
+                    } else {
+                        // Jika tidak ditemukan, coba cari dengan pola lain
+                        $files2 = glob("../../image/buku/*{$gambar_id}*");
+                        if(!empty($files2)) {
+                            $gambar_path = $files2[0];
+                        }
+                    }
+                }
+                ?>
+                <img src="<?php echo $gambar_path; ?>" 
                      class="card-img-top" alt="<?php echo htmlspecialchars($buku['nama_buku']); ?>"
                      style="object-fit: cover; height: 400px;">
             </div>
@@ -164,6 +196,14 @@ include("header_anggota.php");
                            class="btn btn-primary">
                             <i class="fas fa-book-reader mr-2"></i>Baca Buku
                         </a>
+                        
+                        <?php if($allow_download == 1): ?>
+                        <a href="download-buku.php?id=<?php echo $buku['id_t_buku']; ?>" 
+                           class="btn btn-success">
+                            <i class="fas fa-download mr-2"></i>Download PDF
+                        </a>
+                        <?php endif; ?>
+                        
                         <?php endif; ?>
                     </div>
                 </div>

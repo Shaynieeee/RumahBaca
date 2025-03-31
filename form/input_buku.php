@@ -51,6 +51,52 @@ if($id_buku > 0) {
 	$buku = mysqli_fetch_assoc($result);
 }
 
+// Ambil data kategori dari tabel t_kategori_buku
+$sql_kategori = "SELECT * FROM t_kategori_buku ORDER BY nama_kategori";
+$result_kategori = mysqli_query($db, $sql_kategori);
+
+// Cek apakah tabel t_kategori_buku ada
+if (!$result_kategori) {
+    // Jika tabel belum ada, buat tabel
+    $sql_create_table = "CREATE TABLE IF NOT EXISTS t_kategori_buku (
+        id_t_kategori INT AUTO_INCREMENT PRIMARY KEY,
+        nama_kategori VARCHAR(100) NOT NULL,
+        create_by VARCHAR(50) NOT NULL,
+        create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    mysqli_query($db, $sql_create_table);
+    
+    // Tambahkan kategori default
+    $default_categories = ['Umum', 'Novel', 'Komputer', 'Pengembangan Diri', 'Komik'];
+    foreach($default_categories as $category) {
+        $sql_insert = "INSERT INTO t_kategori_buku (nama_kategori, create_by) VALUES (?, ?)";
+        $stmt = mysqli_prepare($db, $sql_insert);
+        mysqli_stmt_bind_param($stmt, "ss", $category, $usersession);
+        mysqli_stmt_execute($stmt);
+    }
+    
+    // Ambil kategori lagi setelah membuat tabel
+    $result_kategori = mysqli_query($db, "SELECT * FROM t_kategori_buku ORDER BY nama_kategori");
+}
+
+// Cari file gambar yang sesuai jika ini adalah halaman edit
+if(!empty($id_buku) && isset($buku['gambar']) && !empty($buku['gambar'])) {
+    $gambar_id = $buku['gambar'];
+    $gambar_path = "../image/buku/default.jpg"; // Default image
+    
+    // Coba cari file dengan pola nama yang sesuai
+    $files = glob("../image/buku/{$gambar_id}*");
+    if(!empty($files)) {
+        $gambar_path = $files[0]; // Ambil file pertama yang ditemukan
+    } else {
+        // Jika tidak ditemukan, coba cari dengan pola lain
+        $files2 = glob("../image/buku/*{$gambar_id}*");
+        if(!empty($files2)) {
+            $gambar_path = $files2[0];
+        }
+    }
+}
+
 // Proses form submit
 if(isset($_POST['submit'])) {
 	try {
@@ -380,6 +426,11 @@ include("header.php");
     <!-- Custom CSS -->
     <link href="../assets/dist/css/sb-admin-2.css" rel="stylesheet">
     
+    <!-- Multiple favicon sizes -->
+    <link rel="icon" type="image/png" sizes="32x32" href="../public/assets/pelindo-logo.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../public/assets/pelindo-logo.png">
+    <link rel="shortcut icon" href="../public/assets/pelindo-logo.png">
+
     <!-- Font Awesome -->
     <link href="../assets/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
 </head>
@@ -387,7 +438,7 @@ include("header.php");
 <div id="page-wrapper">
 	<div class="row">
 		<div class="col-lg-12">
-			<h1 class="page-header"><?php echo $id_buku ? 'Edit Buku' : 'Input Buku Baru'; ?></h1>
+			<h1 class="page-header"><?php echo $id_buku ? 'Edit Buku' : ''; ?></h1>
 		</div>
 	</div>
 	
@@ -440,11 +491,17 @@ include("header.php");
 											<label>Kategori</label>
 											<select name="jenis" class="form-control" required>
 												<option value="">Pilih Kategori</option>
-												<option value="Umum" <?php echo ($buku && $buku['jenis'] == 'Umum') ? 'selected' : ''; ?>>Umum</option>
-												<option value="Novel" <?php echo ($buku && $buku['jenis'] == 'Novel') ? 'selected' : ''; ?>>Novel</option>
-												<option value="Komputer" <?php echo ($buku && $buku['jenis'] == 'Komputer') ? 'selected' : ''; ?>>Komputer</option>
-												<option value="Pengembangan Diri" <?php echo ($buku && $buku['jenis'] == 'Pengembangan Diri') ? 'selected' : ''; ?>>Pengembangan Diri</option>
-												<option value="Komik" <?php echo ($buku && $buku['jenis'] == 'Komik') ? 'selected' : ''; ?>>Komik</option>
+												<?php
+												// Reset result pointer
+												mysqli_data_seek($result_kategori, 0);
+												
+												// Loop through categories
+												while($row_kategori = mysqli_fetch_assoc($result_kategori)) {
+													$selected = ($buku && $buku['jenis'] == $row_kategori['nama_kategori']) ? 'selected' : '';
+													echo "<option value='" . htmlspecialchars($row_kategori['nama_kategori']) . "' $selected>" . 
+														 htmlspecialchars($row_kategori['nama_kategori']) . "</option>";
+												}
+												?>
 											</select>
 										</div>
 									</div>
@@ -487,11 +544,11 @@ include("header.php");
 							<div class="col-md-4">
 								<div class="form-group">
 									<label>Cover Buku</label>
-									<?php if($buku && $buku['gambar']): ?>
-										<img src="<?php echo $upload_path . htmlspecialchars($buku['gambar']); ?>" 
-											 class="img-thumbnail mb-3" 
-											 style="max-width: 200px; height: auto;" 
-											 alt="Cover buku">
+									<?php if(!empty($id_buku) && isset($buku['gambar']) && !empty($buku['gambar'])): ?>
+										<div class="mt-2">
+											<p>Cover saat ini:</p>
+											<img src="<?php echo $gambar_path; ?>" alt="Cover Buku" class="img-thumbnail" style="max-height: 200px;">
+										</div>
 									<?php endif; ?>
 									<div class="input-group">
 										<input type="file" name="gambar" class="form-control" accept="image/*">

@@ -86,14 +86,6 @@ if(isset($_POST['btntambahbuku'])) {
 // Proses simpan peminjaman
 if(isset($_POST['simpan_peminjaman'])) {
     try {
-        // Debugging - uncomment untuk melihat data
-        echo "<pre>";
-        echo "POST Data:\n";
-        var_dump($_POST);
-        echo "\nSESSION Data:\n";
-        var_dump($_SESSION);
-        echo "</pre>";
-        
         // Cek apakah ada data anggota di session
         if (!isset($_SESSION['selected_anggota'])) {
             throw new Exception("Data anggota tidak ditemukan dalam session");
@@ -132,10 +124,21 @@ if(isset($_POST['simpan_peminjaman'])) {
         
         $tgl_pinjam = date('Y-m-d');
         $tgl_kembali = $_POST['tgl_kembali'] ?? date('Y-m-d', strtotime('+7 days'));
+        
+        // Validasi tanggal kembali
+        if (strtotime($tgl_kembali) < strtotime($tgl_pinjam)) {
+            throw new Exception("Tanggal kembali tidak boleh lebih awal dari tanggal pinjam");
+        }
+        
         $create_by = substr($_SESSION['login_user'] ?? 'SYS', 0, 3);
         
         // Set id_staff null jika admin
         $id_staff = ($_SESSION['role'] == 2) ? $_SESSION['id_staff'] : null;
+        
+        // Generate nomor peminjaman
+        $tahun = date('Y');
+        $bulan = date('m');
+        $no_peminjaman = "PJM" . $tahun . $bulan . sprintf("%03d", rand(1, 999));
         
         // 1. Insert ke t_peminjaman
         $sql_pinjam = "INSERT INTO t_peminjaman (no_peminjaman, id_t_anggota, id_t_staff, 
@@ -155,6 +158,18 @@ if(isset($_POST['simpan_peminjaman'])) {
         if (isset($_POST['id_buku']) && is_array($_POST['id_buku'])) {
             foreach($_POST['id_buku'] as $key => $id_buku) {
                 $jumlah = $_POST['jumlah_buku'][$key];
+                
+                // Cek stok buku
+                $sql_stok = "SELECT stok FROM t_buku WHERE id_t_buku = ?";
+                $stmt_stok = mysqli_prepare($db, $sql_stok);
+                mysqli_stmt_bind_param($stmt_stok, "i", $id_buku);
+                mysqli_stmt_execute($stmt_stok);
+                $result_stok = mysqli_stmt_get_result($stmt_stok);
+                $row_stok = mysqli_fetch_assoc($result_stok);
+                
+                if ($row_stok['stok'] < $jumlah) {
+                    throw new Exception("Stok buku tidak mencukupi");
+                }
                 
                 $sql_detail = "INSERT INTO t_detil_pinjam (id_t_peminjaman, id_t_buku, qty, 
                               kondisi, create_date, create_by) 
@@ -180,66 +195,108 @@ if(isset($_POST['simpan_peminjaman'])) {
         mysqli_commit($db);
         $success = "Peminjaman berhasil disimpan";
         
-        // Perbaikan query riwayat peminjaman
-        $sql_riwayat = "SELECT dp.id_t_detil_pinjam, dp.qty, 
-                               b.nama_buku, b.penulis, b.harga,
-                               p.id_t_peminjaman, p.no_peminjaman, p.tgl_pinjam 
-                        FROM t_peminjaman p
-                        JOIN t_detil_pinjam dp ON p.id_t_peminjaman = dp.id_t_peminjaman
-                        JOIN t_buku b ON dp.id_t_buku = b.id_t_buku 
-                        WHERE p.id_t_anggota = ? 
-                        ORDER BY p.create_date DESC, dp.id_t_detil_pinjam DESC";
-        $stmt_riwayat = mysqli_prepare($db, $sql_riwayat);
-        mysqli_stmt_bind_param($stmt_riwayat, "i", $id_anggota);
-        mysqli_stmt_execute($stmt_riwayat);
-        $result_riwayat = mysqli_stmt_get_result($stmt_riwayat);
-        
-        // Debug hasil query
-        debug_to_console("Query riwayat: " . $sql_riwayat . " dengan id_anggota = " . $id_anggota);
-        debug_to_console("Jumlah hasil riwayat: " . mysqli_num_rows($result_riwayat));
-        
-        // Jika tidak ada hasil, coba query alternatif
-        if (mysqli_num_rows($result_riwayat) == 0) {
-            debug_to_console("Mencoba query alternatif tanpa JOIN...");
-            
-            // Query alternatif tanpa JOIN
-            $sql_alt = "SELECT * FROM t_peminjaman WHERE id_t_anggota = ?";
-            $stmt_alt = mysqli_prepare($db, $sql_alt);
-            mysqli_stmt_bind_param($stmt_alt, "i", $id_anggota);
-            mysqli_stmt_execute($stmt_alt);
-            $result_alt = mysqli_stmt_get_result($stmt_alt);
-            
-            debug_to_console("Jumlah peminjaman (query alternatif): " . mysqli_num_rows($result_alt));
-            
-            // Jika ada peminjaman tapi tidak ada di hasil JOIN, mungkin ada masalah dengan relasi
-            if (mysqli_num_rows($result_alt) > 0) {
-                while ($row_alt = mysqli_fetch_assoc($result_alt)) {
-                    debug_to_console("Peminjaman #" . $row_alt['no_peminjaman'] . " ditemukan, tapi tidak ada di hasil JOIN");
-                    
-                    // Cek detail peminjaman
-                    $id_peminjaman = $row_alt['id_t_peminjaman'];
-                    $query_detail = "SELECT COUNT(*) as count FROM t_detil_pinjam WHERE id_t_peminjaman = $id_peminjaman";
-                    $result_detail = mysqli_query($db, $query_detail);
-                    $row_detail = mysqli_fetch_assoc($result_detail);
-                    debug_to_console("Jumlah detail untuk peminjaman #" . $row_alt['no_peminjaman'] . ": " . $row_detail['count']);
-                }
-            }
-        }
+        // Redirect ke halaman yang sama dengan parameter sukses
+        header("Location: input_peminjaman.php?success=1&id_anggota=".$id_anggota);
+        exit;
         
     } catch (Exception $e) {
         mysqli_rollback($db);
         $error = "Terjadi kesalahan: " . $e->getMessage();
-        $result_riwayat = null;
     }
+}
+
+// Ambil data riwayat jika ada parameter success dan id_anggota
+if(isset($_GET['success']) && isset($_GET['id_anggota'])) {
+    $success = "Peminjaman berhasil disimpan";
+    $id_anggota = $_GET['id_anggota'];
+    
+    // Query untuk mendapatkan data anggota
+    $sql_anggota = "SELECT * FROM t_anggota WHERE id_t_anggota = ?";
+    $stmt_anggota = mysqli_prepare($db, $sql_anggota);
+    mysqli_stmt_bind_param($stmt_anggota, "i", $id_anggota);
+    mysqli_stmt_execute($stmt_anggota);
+    $result_anggota = mysqli_stmt_get_result($stmt_anggota);
+    $anggota = mysqli_fetch_assoc($result_anggota);
+    
+    if($anggota) {
+        $_SESSION['selected_anggota'] = $anggota;
+    }
+    
+    // Query riwayat peminjaman
+    $sql_riwayat = "SELECT dp.id_t_detil_pinjam, dp.qty, 
+                           b.nama_buku, b.penulis, b.harga,
+                           p.id_t_peminjaman, p.no_peminjaman, p.tgl_pinjam 
+                    FROM t_peminjaman p
+                    JOIN t_detil_pinjam dp ON p.id_t_peminjaman = dp.id_t_peminjaman
+                    JOIN t_buku b ON dp.id_t_buku = b.id_t_buku 
+                    WHERE p.id_t_anggota = ? 
+                    ORDER BY p.create_date DESC, dp.id_t_detil_pinjam DESC";
+    $stmt_riwayat = mysqli_prepare($db, $sql_riwayat);
+    mysqli_stmt_bind_param($stmt_riwayat, "i", $id_anggota);
+    mysqli_stmt_execute($stmt_riwayat);
+    $result_riwayat = mysqli_stmt_get_result($stmt_riwayat);
 }
 
 include("header.php");
 ?>
 
+<!-- Tampilkan hasil di bagian atas jika ada success -->
+<?php if(!empty($success)): ?>
 <div id="page-wrapper">
     <div class="row">
         <div class="col-lg-12">
-            <h1 class="page-header">Input Peminjaman</h1>
+            <h1 class="page-header">Hasil Peminjaman</h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="alert alert-success"><?php echo $success; ?></div>
+            
+            <?php if(isset($result_riwayat) && mysqli_num_rows($result_riwayat) > 0): ?>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4>Detail Peminjaman Terbaru</h4>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Buku</th>
+                                <th>Penulis</th>
+                                <th>Qty</th>
+                                <th>Harga</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php 
+                            $no = 1;
+                            while($row = mysqli_fetch_assoc($result_riwayat)): ?>
+                                <tr>
+                                    <td><?php echo $no++; ?></td>
+                                    <td><?php echo htmlspecialchars($row['nama_buku']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['penulis']); ?></td>
+                                    <td><?php echo $row['qty']; ?></td>
+                                    <td>Rp <?php echo number_format($row['harga'],0,',','.'); ?></td>
+                                </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                    
+                    <a href="input_peminjaman.php" class="btn btn-primary">Buat Peminjaman Baru</a>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+<?php else: ?>
+<!-- Form peminjaman normal jika tidak ada success -->
+<div id="page-wrapper">
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header"></h1>
         </div>
     </div>
     
@@ -277,7 +334,7 @@ include("header.php");
                             <label class="control-label col-sm-2">Cari Anggota</label>
                             <div class="col-sm-4">
                                 <input type="text" class="form-control" name="keyword" id="keyword" 
-                                       placeholder="Masukkan NIPP / Nama / No Telepon">
+                                       placeholder="Masukkan No Anggota / Nama / No Telepon">
                             </div>
                             <div class="col-sm-2">
                                 <button type="submit" name="btncari" class="btn btn-primary">Cari</button>
@@ -493,10 +550,6 @@ include("header.php");
                     <h4>Riwayat Peminjaman</h4>
                 </div>
                 <div class="panel-body">
-                    <?php if(!empty($success)): ?>
-                        <div class="alert alert-success"><?php echo $success; ?></div>
-                    <?php endif; ?>
-                    
                     <?php if(!empty($error)): ?>
                         <div class="alert alert-danger"><?php echo $error; ?></div>
                     <?php endif; ?>
@@ -543,6 +596,7 @@ include("header.php");
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <script type="text/javascript">
 $(document).ready(function() {
@@ -658,15 +712,16 @@ function simpanPeminjaman() {
 
     // Validasi tanggal kembali
     var tglKembali = $('#tgl_kembali').val();
+    var tglPinjam = $('input[name="tgl_pinjam"]').val();
+    
     if (!tglKembali) {
         alert('Tanggal kembali harus diisi!');
         return false;
     }
     
-    // Validasi tanggal kembali tidak boleh kurang dari tanggal sekarang
-    var today = new Date().toISOString().split('T')[0];
-    if (tglKembali < today) {
-        alert('Tanggal kembali tidak boleh kurang dari tanggal sekarang!');
+    // Validasi tanggal kembali tidak boleh kurang dari tanggal pinjam
+    if (new Date(tglKembali) < new Date(tglPinjam)) {
+        alert('Tanggal kembali tidak boleh lebih awal dari tanggal pinjam!');
         return false;
     }
 

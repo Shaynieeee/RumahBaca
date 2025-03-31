@@ -47,7 +47,7 @@ if ($id_st != null){
     $result_data = mysqli_query($db,$sql_data);
     $tampil_data = mysqli_fetch_array($result_data,MYSQLI_ASSOC);
 } else {
-    $judul = "Input Staff";
+    $judul = "";
     $tampil_data = array('nama' => '', 'alamat' => '', 'status' => '');
 }
 

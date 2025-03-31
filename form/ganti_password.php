@@ -104,7 +104,7 @@ if(isset($_POST['btnsubmit'])) {
 	</div>
 </div>
 <?php 
-include "footer.php";
+// include "../template/footer.php";
 
 // Debug di bagian bawah
 if(isset($_POST['btnsubmit'])) {

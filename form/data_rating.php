@@ -17,18 +17,18 @@ if ($user_role != 1 && $user_role != 2) {
 
 <head>
     <!-- Bootstrap CSS -->
-    <link href="../template/css/bootstrap.min.css" rel="stylesheet">
+    <!-- <link href="../template/css/bootstrap.min.css" rel="stylesheet"> -->
 </head>
-
-<div id="page-wrapper" style="padding-left: 40px;">
-    <div class="container-fluid">
-
+    
+    <div id="page-wrapper" style="padding-left: 40px;">
+        <div class="container-fluid">
+            
     <div class="row">
         <div class="col-lg-12">
-            <h1 class="page-header">Data Rating & Ulasan</h1>
+            <h1 class="page-header"></h1>
         </div>
     </div>
-
+    
     <div class="row" style="margin-top:-80px;">
         <div class="col-lg-12">
             <div class="panel panel-default">
@@ -39,38 +39,38 @@ if ($user_role != 1 && $user_role != 2) {
                     <div class="table-responsive">
                         <!-- Tambahkan style untuk tabel -->
                         <style>
-                        .table > thead > tr > th {
-                            vertical-align: middle;
-                            text-align: center;
-                            padding: 12px;
-                        }
-
-                        .table > tbody > tr > td {
-                            vertical-align: middle;
-                            padding: 12px;
-                        }
-
-                        .btn-group-action {
-                            display: flex;
-                            gap: 5px;
-                            justify-content: center;
-                        }
-
-                        .like-dislike-count {
-                            text-align: center;
-                        }
-
-                        .like-dislike-count i {
-                            margin: 0 5px;
-                        }
-
-                        .rating-stars {
-                            color: #ffc107;
-                            white-space: nowrap;
-                        }
-
-                        .balasan-container {
-                            margin-top: 10px;
+                            .table > thead > tr > th {
+                                vertical-align: middle;
+                                text-align: center;
+                                padding: 12px;
+                            }
+                            
+                            .table > tbody > tr > td {
+                                vertical-align: middle;
+                                padding: 12px;
+                            }
+                            
+                            .btn-group-action {
+                                display: flex;
+                                gap: 5px;
+                                justify-content: center;
+                            }
+                            
+                            .like-dislike-count {
+                                text-align: center;
+                            }
+                            
+                            .like-dislike-count i {
+                                margin: 0 5px;
+                            }
+                            
+                            .rating-stars {
+                                color: #ffc107;
+                                white-space: nowrap;
+                            }
+                            
+                            .balasan-container {
+                                margin-top: 10px;
                             padding: 10px;
                             background: #f8f9fa;
                             border-radius: 5px;
@@ -81,22 +81,22 @@ if ($user_role != 1 && $user_role != 2) {
                             margin-bottom: 8px;
                             border-bottom: 1px solid #dee2e6;
                         }
-
+                        
                         .balasan-header {
                             display: flex;
                             justify-content: space-between;
                             margin-bottom: 5px;
                         }
-
+                        
                         .balasan-actions {
                             display: flex;
                             gap: 5px;
                         }
-
+                        
                         .balasan-content {
                             margin-left: 20px;
                         }
-
+                        
                         .nested-balasan {
                             margin-left: 20px;
                             border-left: 2px solid #dee2e6;
@@ -139,7 +139,7 @@ if ($user_role != 1 && $user_role != 2) {
                                     <td><?php echo htmlspecialchars($row['nama']); ?></td>
                                     <td class="text-center">
                                         <div class="rating-stars">
-                                        <?php
+                                            <?php
                                         for($i = 1; $i <= 5; $i++) {
                                             if($i <= $row['rating']) {
                                                 echo '<i class="fa fa-star"></i>';
@@ -169,9 +169,9 @@ if ($user_role != 1 && $user_role != 2) {
                                                 <i class="fa fa-thumbs-down"></i>
                                             </button>
                                             <button type="button" 
-                                                    class="btn btn-sm btn-primary" 
-                                                    onclick="balasUlasan(<?php echo $row['id_rating']; ?>)" 
-                                                    title="Balas">
+                                            class="btn btn-sm btn-primary" 
+                                            onclick="balasUlasan(<?php echo $row['id_rating']; ?>)" 
+                                            title="Balas">
                                                 <i class="fa fa-reply"></i>
                                             </button>
                                         </div> -->
@@ -201,7 +201,7 @@ if ($user_role != 1 && $user_role != 2) {
             </div>
         </div>
     </div>
-
+    
     <!-- Modal Balas Ulasan -->
     <div class="modal" id="modalBalas" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
@@ -228,7 +228,7 @@ if ($user_role != 1 && $user_role != 2) {
             </div>
         </div>
     </div>
-                                    </div>
+</div>
 </div>
 
 <!-- Hanya include file JS yang diperlukan -->

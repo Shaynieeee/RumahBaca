@@ -26,6 +26,14 @@ mysqli_stmt_bind_param($stmt, "i", $id_peminjaman);
 mysqli_stmt_execute($stmt);
 $result_detail = mysqli_stmt_get_result($stmt);
 
+// Ambil pengaturan denda
+$sql_denda = "SELECT * FROM t_pengaturan_denda";
+$result_denda = mysqli_query($db, $sql_denda);
+$pengaturan_denda = [];
+while($row = mysqli_fetch_assoc($result_denda)) {
+    $pengaturan_denda[$row['jenis_denda']] = $row['nilai_denda'];
+}
+
 if(!$data_pinjam) {
     echo "<script>alert('Data Peminjaman tidak ditemukan!'); window.location='data_peminjaman.php';</script>";
     exit;
@@ -38,34 +46,91 @@ if(isset($_POST['submit'])) {
     $qty = $_POST['qty'];
     $kondisi = $_POST['kondisi'];
     $keterangan = $_POST['keterangan'];
-    $denda = $_POST['denda'];
+    $denda = $_POST['denda']; // Denda dari kondisi buku
     $tgl_kembali = $_POST['tgl_kembali'];
-    $status = $_POST['status']; // Ambil status dari form
-
+    $status = $_POST['status'];
+    
     mysqli_begin_transaction($db);
     
     try {
-        // Update detail peminjaman
-        $sql_update_detail = "UPDATE t_detil_pinjam SET 
-                            qty = '$qty',
-                            kondisi = '$kondisi',
-                            keterangan = '$keterangan',
-                            denda = '$denda'
-                            WHERE id_t_detil_pinjam = '$id_detil'";
-        mysqli_query($db, $sql_update_detail);
-
-        // Update tanggal kembali dan status di tabel peminjaman
-        $sql_update_pinjam = "UPDATE t_peminjaman SET 
-                             tgl_kembali = " . ($tgl_kembali ? "'$tgl_kembali'" : "NULL") . ",
-                             status = '$status'
-                             WHERE id_t_peminjaman = '$id_peminjaman'";
-        mysqli_query($db, $sql_update_pinjam);
+        // Ambil data peminjaman untuk hitung keterlambatan
+        $sql_pinjam = "SELECT p.*, b.harga, DATEDIFF(CURDATE(), p.tgl_kembali) as hari_terlambat 
+                       FROM t_peminjaman p 
+                       JOIN t_detil_pinjam dp ON p.id_t_peminjaman = dp.id_t_peminjaman
+                       JOIN t_buku b ON dp.id_t_buku = b.id_t_buku
+                       WHERE p.id_t_peminjaman = ?";
+        $stmt = mysqli_prepare($db, $sql_pinjam);
+        mysqli_stmt_bind_param($stmt, "i", $id_peminjaman);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $data_pinjam = mysqli_fetch_assoc($result);
+        
+        // Hitung denda keterlambatan
+            $denda_terlambat = 0;
+        if ($data_pinjam['hari_terlambat'] > 0) {
+            $denda_terlambat = $data_pinjam['hari_terlambat'] * 2000; // Rp 2.000 per hari
+        }
+        
+        // Total denda = denda keterlambatan + denda kondisi buku
+        $total_denda = $denda_terlambat + $denda;
+            
+            // Update detail peminjaman
+        $sql_update = "UPDATE t_detil_pinjam SET 
+                                qty = ?,
+                                kondisi = ?,
+                                keterangan = ?,
+                       denda = ?,
+                       update_date = CURDATE(),
+                       update_by = ?
+                                WHERE id_t_detil_pinjam = ?";
+        $stmt = mysqli_prepare($db, $sql_update);
+        $update_by = substr($_SESSION['login_user'] ?? 'SYS', 0, 3);
+        mysqli_stmt_bind_param($stmt, "issisi", $qty, $kondisi, $keterangan, $total_denda, $update_by, $id_detil);
+        
+        if (!mysqli_stmt_execute($stmt)) {
+            throw new Exception("Error updating detail: " . mysqli_error($db));
+        }
+        
+        // Update status peminjaman
+        $sql_status = "UPDATE t_peminjaman SET 
+                       status = ?,
+                       tgl_kembali = ?,
+                       update_date = CURDATE(),
+                       update_by = ?
+                       WHERE id_t_peminjaman = ?";
+        $stmt = mysqli_prepare($db, $sql_status);
+        mysqli_stmt_bind_param($stmt, "sssi", $status, $tgl_kembali, $update_by, $id_peminjaman);
+        
+        if (!mysqli_stmt_execute($stmt)) {
+            throw new Exception("Error updating status: " . mysqli_error($db));
+        }
+        
+        // Jika status "Dikembalikan", kembalikan stok buku
+        if ($status == 'Dikembalikan') {
+            $sql_stok = "UPDATE t_buku b 
+                        JOIN t_detil_pinjam dp ON b.id_t_buku = dp.id_t_buku 
+                        SET b.stok = b.stok + dp.qty 
+                        WHERE dp.id_t_detil_pinjam = ?";
+            $stmt = mysqli_prepare($db, $sql_stok);
+            mysqli_stmt_bind_param($stmt, "i", $id_detil);
+            
+            if (!mysqli_stmt_execute($stmt)) {
+                throw new Exception("Error updating stock: " . mysqli_error($db));
+            }
+        }
 
         mysqli_commit($db);
-        echo "<script>alert('Data berhasil diupdate!'); window.location='data_peminjaman.php';</script>";
+        echo "<script>
+                alert('Data berhasil diupdate!');
+                window.location='data_peminjaman.php';
+              </script>";
+        exit;
+        
     } catch (Exception $e) {
         mysqli_rollback($db);
-        echo "<script>alert('Gagal mengupdate data: " . $e->getMessage() . "');</script>";
+        echo "<script>
+                alert('Error: " . $e->getMessage() . "');
+              </script>";
     }
 }
 ?>
@@ -80,6 +145,18 @@ if(isset($_POST['submit'])) {
     <div class="panel panel-default">
         <div class="panel-heading">
             <h4>Detail Peminjaman</h4>
+            <?php
+            // Tampilkan informasi keterlambatan jika ada
+            if($data_pinjam['status'] == 'Belum Kembali') {
+                $days_late = floor((strtotime('now') - strtotime($data_pinjam['tgl_pinjam'])) / (60 * 60 * 24));
+                if($days_late > 0) {
+                    echo '<div class="alert alert-warning">';
+                    echo 'Buku terlambat dikembalikan ' . $days_late . ' hari. ';
+                    echo 'Denda keterlambatan akan dihitung 10% dari harga buku per hari.';
+                    echo '</div>';
+                }
+            }
+            ?>
         </div>
         <div class="panel-body">
             <div class="row mb-3">
@@ -191,13 +268,16 @@ if(isset($_POST['submit'])) {
 $(document).ready(function() {
     // Fungsi untuk menghitung denda
     function hitungDenda(kondisi, harga) {
+        var dendaRusak = <?php echo isset($pengaturan_denda['rusak']) ? $pengaturan_denda['rusak'] : 30; ?>;
+        var dendaHilang = <?php echo isset($pengaturan_denda['hilang']) ? $pengaturan_denda['hilang'] : 100; ?>;
+        
         switch(kondisi) {
             case 'Rusak':
-                return Math.round(harga * 0.3); // 30% dari harga buku
+                return Math.round(harga * (dendaRusak/100));
             case 'Hilang':
-                return harga; // 100% harga buku
+                return Math.round(harga * (dendaHilang/100));
             default:
-                return 0; // Tidak ada denda untuk kondisi Baik
+                return 0;
         }
     }
 

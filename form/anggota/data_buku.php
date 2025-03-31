@@ -57,9 +57,15 @@ include("header_anggota.php");
                                 <div class="form-group">
                                     <select name="txtKategori" class="form-control">
                                         <option value="">Semua Kategori</option>
-                                        <option value="Umum" <?php echo (isset($_GET['txtKategori']) && $_GET['txtKategori'] == 'Umum') ? 'selected' : ''; ?>>Umum</option>
-                                        <option value="Novel" <?php echo (isset($_GET['txtKategori']) && $_GET['txtKategori'] == 'Novel') ? 'selected' : ''; ?>>Novel</option>
-                                        <!-- Tambahkan kategori lainnya -->
+                                        <?php
+                                        // Gunakan tabel t_kategori_buku untuk kategori
+                                        $sql_kategori = "SELECT nama_kategori FROM t_kategori_buku ORDER BY nama_kategori";
+                                        $result_kategori = mysqli_query($db, $sql_kategori);
+                                        while($row_kategori = mysqli_fetch_assoc($result_kategori)) {
+                                            $selected = (isset($_GET['txtKategori']) && $_GET['txtKategori'] == $row_kategori['nama_kategori']) ? 'selected' : '';
+                                            echo "<option value='".$row_kategori['nama_kategori']."' $selected>".$row_kategori['nama_kategori']."</option>";
+                                        }
+                                        ?>
                                     </select>
                                 </div>
                             </div>
@@ -121,43 +127,62 @@ include("header_anggota.php");
         while($row = mysqli_fetch_assoc($result)) {
             ?>
             <div class="col-md-3 mb-4">
-                                    <div class="card h-100">
-                                        <img src="../../image/buku/<?php echo htmlspecialchars($row['gambar'] ?? 'default.jpg'); ?>" 
-                                             class="card-img-top" alt="<?php echo htmlspecialchars($row['nama_buku'] ?? 'Tidak ada judul'); ?>"
-                                             style="height: 250px; object-fit: cover;">
-                                        <div class="card-body d-flex flex-column">
-                                            <h5 class="card-title text-truncate"><?php echo htmlspecialchars($row['nama_buku'] ?? 'Tidak ada judul'); ?></h5>
-                                            <p class="card-text">
-                                                <small class="text-muted">
-                                                    <i class="fa fa-user"></i> <?php echo htmlspecialchars($row['penulis'] ?? 'Tidak ada penulis'); ?><br>
-                                                    <i class="fa fa-calendar"></i> <?php echo htmlspecialchars($row['tahun_terbit'] ?? 'Tidak ada tahun'); ?>
-                                                </small>
-                                            </p>
-                                            <div class="mt-2">
-                                                <?php if(!empty($row['file_buku'])): ?>
-                                                    <?php if($row['stok'] > 0): ?>
-                                                        <span class="badge badge-success">Tersedia Offline</span>
-                                                        <span class="badge badge-info">Tersedia Online</span>
-                                                    <?php else: ?>
-                                                        <span class="badge badge-info">Tersedia Hanya Online</span>
-                                                    <?php endif; ?>
-                                                <?php else: ?>
-                                                    <?php if($row['stok'] > 0): ?>
-                                                        <span class="badge badge-success">Tersedia Offline</span>
-                                                    <?php else: ?>
-                                                        <span class="badge badge-danger">Tidak Tersedia</span>
-                                                    <?php endif; ?>
-                                                <?php endif; ?>
-                                            </div>
-                                            <div class="btn-group mt-auto w-100">
-                                                <a href="detail-buku.php?id=<?php echo $row['id_t_buku']; ?>" 
-                                                   class="btn btn-info btn-sm">
-                                                    <i class="fa fa-info-circle"></i> Detail
-                                                </a>    
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                <div class="card h-100">
+                    <?php
+                    // Cari file gambar yang sesuai
+                    $gambar_id = $row['gambar'] ?? '';
+                    $gambar_path = "../../image/buku/default.jpg"; // Default image
+                    
+                    if(!empty($gambar_id)) {
+                        // Coba cari file dengan pola nama yang sesuai
+                        $files = glob("../../image/buku/{$gambar_id}*");
+                        if(!empty($files)) {
+                            $gambar_path = $files[0]; // Ambil file pertama yang ditemukan
+                        } else {
+                            // Jika tidak ditemukan, coba cari dengan pola lain
+                            $files2 = glob("../../image/buku/*{$gambar_id}*");
+                            if(!empty($files2)) {
+                                $gambar_path = $files2[0];
+                            }
+                        }
+                    }
+                    ?>
+                    <img src="<?php echo $gambar_path; ?>" 
+                         class="card-img-top" alt="<?php echo htmlspecialchars($row['nama_buku'] ?? 'Tidak ada judul'); ?>"
+                         style="height: 250px; object-fit: cover;">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-truncate"><?php echo htmlspecialchars($row['nama_buku'] ?? 'Tidak ada judul'); ?></h5>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                <i class="fa fa-user"></i> <?php echo htmlspecialchars($row['penulis'] ?? 'Tidak ada penulis'); ?><br>
+                                <i class="fa fa-calendar"></i> <?php echo htmlspecialchars($row['tahun_terbit'] ?? 'Tidak ada tahun'); ?>
+                            </small>
+                        </p>
+                        <div class="mt-2">
+                            <?php if(!empty($row['file_buku'])): ?>
+                                <?php if($row['stok'] > 0): ?>
+                                    <span class="badge badge-success">Tersedia Offline</span>
+                                    <span class="badge badge-info">Tersedia Online</span>
+                                <?php else: ?>
+                                    <span class="badge badge-info">Tersedia Hanya Online</span>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <?php if($row['stok'] > 0): ?>
+                                    <span class="badge badge-success">Tersedia Offline</span>
+                                <?php else: ?>
+                                    <span class="badge badge-danger">Tidak Tersedia</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
+                        <div class="btn-group mt-auto w-100">
+                            <a href="detail-buku.php?id=<?php echo $row['id_t_buku']; ?>" 
+                               class="btn btn-info btn-sm">
+                                <i class="fa fa-info-circle"></i> Detail
+                            </a>    
+                        </div>
+                    </div>
+                </div>
+            </div>
             <?php
         }
         ?>

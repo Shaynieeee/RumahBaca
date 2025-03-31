@@ -142,7 +142,6 @@ include("header.php");
 			<?php } else { ?>
 				<a href="<?php echo $url_edit;?>" class="btn btn-primary">Ubah Profile</a>
 				<a href="ganti_password.php" class="btn btn-primary">Ubah Password</a>
-				<a href="cetak_kartu_anggota.php?id=<?php echo $idnya;?>" class="btn btn-primary">Cetak Kartu Anggota</a>
 			<?php } ?>
 		</div>
 	</div>

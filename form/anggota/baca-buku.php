@@ -102,12 +102,25 @@ include("header_anggota.php");
     </div>
 </div>
 
+<!-- Overlay untuk mencegah screenshot -->
+<div id="screenshotOverlay" class="screenshot-overlay">
+    <div class="overlay-content">
+        <h2>⚠️ PERINGATAN HAK CIPTA!</h2>
+        <p>Screenshot dan screen recording tidak diizinkan.<br>Konten ini dilindungi hak cipta.</p>
+        <button onclick="hideScreenshotOverlay()">Tutup</button>
+    </div>
+</div>
+
 <style>
 .book-reader-container {
     background: #2a2a2a;
     height: calc(100vh - 100px);
     display: flex;
     flex-direction: column;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .control-bar {
@@ -147,12 +160,23 @@ include("header_anggota.php");
     background: #525659;
     padding: 12px;
     gap: 20px;
+    position: relative;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .page-canvas {
     background: #fff;
     box-shadow: 0 0 10px rgba(0,0,0,0.3);
     max-height: calc(100vh - 180px);
+    position: relative;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
 }
 
 .single-page-mode .page-canvas:nth-child(2) {
@@ -177,6 +201,135 @@ include("header_anggota.php");
     right: 0;
     bottom: 0;
     z-index: 9999;
+}
+
+/* Style untuk overlay blur dan pesan hak cipta */
+.copyright-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 99999;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+}
+
+.copyright-content {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+}
+
+.copyright-message {
+    font-size: 32px;
+    color: #dc3545;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.copyright-submessage {
+    font-size: 20px;
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.close-overlay-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.close-overlay-btn:hover {
+    background: #c82333;
+}
+
+/* Tambahkan CSS untuk mencegah screenshot */
+@media print {
+    .book-container {
+        display: none !important;
+    }
+    .copyright-overlay {
+        display: flex !important;
+    }
+}
+
+.screenshot-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    z-index: 999999;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.overlay-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.overlay-content h2 {
+    color: #dc3545;
+    font-size: 24px;
+    margin-bottom: 1rem;
+}
+
+.overlay-content p {
+    color: #333;
+    font-size: 18px;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.overlay-content button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.overlay-content button:hover {
+    background-color: #c82333;
+}
+
+.page-canvas {
+    pointer-events: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
 }
 </style>
 
@@ -563,6 +716,214 @@ document.getElementById('nextPage').addEventListener('click', function() {
         document.getElementById('current_page').value = pageNum;
     }
 });
+
+// Fungsi untuk menampilkan overlay hak cipta yang diperbarui
+function showCopyrightOverlay() {
+    const overlay = document.getElementById('copyrightOverlay');
+    overlay.style.display = 'flex';
+    
+    // Tambahkan blur ke konten saat overlay muncul
+    document.getElementById('pdf_container').style.filter = 'blur(20px)';
+}
+
+// Fungsi untuk menyembunyikan overlay
+function hideCopyrightOverlay() {
+    const overlay = document.getElementById('copyrightOverlay');
+    overlay.style.display = 'none';
+    document.getElementById('pdf_container').style.filter = 'none';
+}
+
+// Perkuat deteksi screenshot
+window.addEventListener('keydown', function(e) {
+    // Deteksi kombinasi tombol screenshot
+    if (
+        (e.key === 'PrintScreen') || 
+        (e.ctrlKey && e.key === 'p') || 
+        (e.ctrlKey && e.key === 's') ||
+        (e.ctrlKey && e.shiftKey && e.key === 'i') ||
+        (e.ctrlKey && e.shiftKey && e.key === 'c') ||
+        (e.ctrlKey && e.shiftKey && e.key === 'j') ||
+        (e.metaKey && e.shiftKey && e.key === 's')
+    ) {
+        e.preventDefault();
+        showCopyrightOverlay();
+        return false;
+    }
+}, true);
+
+// Tambahkan event listener untuk mencegah copy-paste
+document.addEventListener('copy', function(e) {
+    e.preventDefault();
+    showCopyrightOverlay();
+});
+
+document.addEventListener('paste', function(e) {
+    e.preventDefault();
+    showCopyrightOverlay();
+});
+
+// Nonaktifkan menu klik kanan
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    showCopyrightOverlay();
+});
+
+// Deteksi screen recording menggunakan Fullscreen API
+document.addEventListener('fullscreenchange', checkScreenRecording);
+document.addEventListener('webkitfullscreenchange', checkScreenRecording);
+document.addEventListener('mozfullscreenchange', checkScreenRecording);
+document.addEventListener('MSFullscreenChange', checkScreenRecording);
+
+function checkScreenRecording() {
+    if (document.fullscreenElement || 
+        document.webkitFullscreenElement || 
+        document.mozFullScreenElement || 
+        document.msFullscreenElement) {
+        showCopyrightOverlay();
+    }
+}
+
+// Tambahkan deteksi untuk DevTools
+let devToolsCheck = setInterval(() => {
+    const widthThreshold = window.outerWidth - window.innerWidth > 160;
+    const heightThreshold = window.outerHeight - window.innerHeight > 160;
+    
+    if(widthThreshold || heightThreshold) {
+        showCopyrightOverlay();
+    }
+}, 1000);
+
+// Tambahkan deteksi untuk tab visibility
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        showCopyrightOverlay();
+    }
+});
+
+// Fungsi untuk menampilkan overlay
+function showScreenshotOverlay() {
+    const overlay = document.getElementById('screenshotOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+    }
+}
+
+// Fungsi untuk menyembunyikan overlay
+function hideScreenshotOverlay() {
+    const overlay = document.getElementById('screenshotOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Deteksi screenshot menggunakan berbagai metode
+document.addEventListener('keyup', function(e) {
+    if (e.key === 'PrintScreen') {
+        showScreenshotOverlay();
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    // Deteksi kombinasi tombol umum untuk screenshot
+    if (
+        (e.key === 'PrintScreen') ||
+        (e.ctrlKey && e.key === 'p') ||
+        (e.ctrlKey && e.key === 'P') ||
+        (e.metaKey && e.key === 'p') ||
+        (e.metaKey && e.key === 'P') ||
+        (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) ||
+        (e.ctrlKey && e.altKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key))
+    ) {
+        e.preventDefault();
+        showScreenshotOverlay();
+        return false;
+    }
+});
+
+// Deteksi screenshot pada browser yang mendukung
+if ('ClipboardItem' in window) {
+    navigator.permissions.query({ name: 'clipboard-write' }).then(result => {
+        if (result.state === 'granted') {
+            document.addEventListener('copy', function(e) {
+                showScreenshotOverlay();
+            });
+        }
+    });
+}
+
+// Deteksi perubahan visibilitas halaman
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') {
+        showScreenshotOverlay();
+    }
+});
+
+// Deteksi screen capture menggunakan Fullscreen API
+document.addEventListener('fullscreenchange', function() {
+    if (document.fullscreenElement) {
+        showScreenshotOverlay();
+    }
+});
+
+// Deteksi penggunaan DevTools
+window.addEventListener('resize', function() {
+    if (window.outerWidth - window.innerWidth > 160 || 
+        window.outerHeight - window.innerHeight > 160) {
+        showScreenshotOverlay();
+    }
+});
+
+// Nonaktifkan menu konteks
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    showScreenshotOverlay();
+});
+
+// Deteksi screenshot menggunakan MutationObserver
+const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+        if (mutation.type === 'childList') {
+            showScreenshotOverlay();
+        }
+    });
+});
+
+observer.observe(document.body, {
+    childList: true,
+    subtree: true
+});
+
+// Tambahan: Deteksi perubahan pada clipboard
+document.addEventListener('paste', function(e) {
+    showScreenshotOverlay();
+});
+
+// Deteksi drag and drop
+document.addEventListener('dragstart', function(e) {
+    e.preventDefault();
+    showScreenshotOverlay();
+});
+
+// Deteksi selection
+document.addEventListener('selectstart', function(e) {
+    e.preventDefault();
+    showScreenshotOverlay();
+});
+
+// Tambahan: Deteksi screenshot pada mobile
+window.addEventListener('touchstart', function(e) {
+    if (e.touches.length > 2) {
+        showScreenshotOverlay();
+    }
+});
+
+// Deteksi screenshot pada browser tertentu
+if (navigator.userAgent.toLowerCase().indexOf('chrome') > -1) {
+    window.addEventListener('beforeprint', function(e) {
+        e.preventDefault();
+        showScreenshotOverlay();
+    });
+}
 </script>
 
 <?php include "footer.php"; ?>

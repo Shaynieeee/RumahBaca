@@ -42,7 +42,7 @@ include("header.php");
 <div id="page-wrapper">
 	<div class="row">
                 <div class="col-lg-12">
-                    <h1 class="page-header">Data Staff</h1>
+                    <h1 class="page-header"></h1>
                 </div>
                 <!-- /.col-lg-12 -->
 	</div>
@@ -80,7 +80,7 @@ include("header.php");
 	<div class="row">
 		<div class="col-lg-12">
 		<table width="100%" class="table table-striped table-bordered table-hover">
-			<tr>
+			<tr style="background: #0067b0; color:#fff;">
 				<th>No</th>
 				<th>Nama Staff</th>
 				<th>Alamat</th>

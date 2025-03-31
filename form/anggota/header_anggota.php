@@ -58,11 +58,11 @@ if(!isset($_SESSION['login_user'])) {
         }
         
         .nav-link {
-            color: rgba(255,255,255,0.8) !important;
+            color: rgb(0, 103, 176) !important;
         }
         
         .nav-link:hover {
-            color: white !important;
+            color: rgb(0, 66, 113) !important;
         }
         
         .hero-section {
@@ -136,12 +136,12 @@ if(!isset($_SESSION['login_user'])) {
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg">
-    <div class="container">
+<nav class="navbar navbar-expand-lg bg-light">
+    <div class="container-fluid">
         <div class="navbar-header">
             <a class="navbar-brand" href="index.php">
                 <img src="../../public/assets/logo-rumahbaca.png" alt="Logo" class="brand-logo">
-                <span class="brand-text">Rumah Baca</span>
+                <span class="brand-text"></span>
             </a>
         </div>
         
@@ -179,7 +179,7 @@ if(!isset($_SESSION['login_user'])) {
                 $anggota = mysqli_fetch_assoc($result_anggota);
                 ?>
                 <div class="dropdown">
-                    <a class="text-white dropdown-toggle" href="#" role="button" data-toggle="dropdown">
+                    <a class="text-dark dropdown-toggle" href="#" role="button" data-toggle="dropdown">
                         <i class="fas fa-user-circle fa-2x mr-2"></i>
                         <?php echo htmlspecialchars($anggota['nama']); ?>
                     </a>
@@ -197,44 +197,6 @@ if(!isset($_SESSION['login_user'])) {
         </div>
     </div>
 </nav>
-
-<?php if(basename($_SERVER['PHP_SELF']) == 'dashboard.php'): ?>
-<div class="hero-section">
-    <div class="container">
-    <p class="welcome-text mb-3">
-            Selamat datang, <?php echo htmlspecialchars($anggota['nama']); ?>
-        </p>
-        <h1>Temukan Buku Favoritmu</h1>
-        <p class="lead">Akses ribuan koleksi buku digital dengan mudah</p>
-        
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="search-section">
-                    <form action="data_buku.php" method="GET" class="row">
-                        <div class="col-md-6">
-                            <input type="text" name="txtJudul" class="form-control" 
-                                   placeholder="Cari judul, pengarang...">
-                        </div>
-                        <div class="col-md-4">
-                            <select name="txtKategori" class="form-control">
-                                <option value="">Semua Kategori</option>
-                                <option value="Umum">Umum</option>
-                                <option value="Novel">Novel</option>
-                                <!-- Tambahkan kategori lainnya -->
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary btn-block">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
 
 <div class="container mt-4">
     <!-- jQuery -->

@@ -66,27 +66,209 @@ $reviews_result = mysqli_query($conn, $reviews_query);
             padding: 1rem;
             background: #f8f9fa;
         }
+
+                /* .hero-section {
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('assets/bg-library.webp');
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 0;
+        } */
+        @import url("https://fonts.googleapis.com/css?family=Poppins:100,300,400,500,600,700,800, 800i, 900&display=swap");
+        .hero-content {
+            text-align: center;
+            color: #ffffff;
+        }
+        
+        .hero-section h1 {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 4rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+        
+        .hero-section p {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 1.5rem;
+            color:rgb(255, 255, 255);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+        
+        .hero-content {
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .search-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin-top: 30px;
+        }
+        
+        .book-card {
+            transition: transform 0.3s;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .category-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .category-box:hover {
+            background: #e9ecef;
+            cursor: pointer;
+        }
+
+        .navbar {
+            background-color: #2c3e50;
+            padding: 15px 0;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+
+        .brand-logo {
+            height: 40px;
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .brand-text {
+            color: #ffffff;
+            font-family: 'poppins';
+            font-size: 70px;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* .navbar-nav .nav-link {
+            color: #ecf0f1;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0 10px;
+        } */
+
+        /* .navbar-nav .nav-link:hover {
+            color: #3498db;
+        } */
+
+        .btn-login {
+            background-color: #3498db;
+            color: #ffffff;
+            padding: 8px 20px;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+
+        .btn-login:hover {
+            background-color: #2980b9;
+            color: #ffffff;
+        }
+
+        /* CSS untuk carousel */
+        .carousel-fade .carousel-item {
+            opacity: 0;
+            transition-duration: 1s;
+            transition-property: opacity;
+        }
+        
+        .carousel-fade .carousel-item.active {
+            opacity: 1;
+        }
+        
+        .carousel-fade .carousel-item-next.carousel-item-start,
+        .carousel-fade .carousel-item-prev.carousel-item-end {
+            opacity: 1;
+        }
+        
+        .carousel-fade .active.carousel-item-start,
+        .carousel-fade .active.carousel-item-end {
+            opacity: 0;
+        }
+        
+        .carousel-fade .carousel-item-next,
+        .carousel-fade .carousel-item-prev,
+        .carousel-fade .carousel-item.active,
+        .carousel-fade .active.carousel-item-start,
+        .carousel-fade .active.carousel-item-end {
+            transform: translateX(0);
+            transform: translate3d(0, 0, 0);
+        }
+        
+        .carousel-caption {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .carousel-indicators {
+            bottom: 20px;
+        }
+        
+        .carousel-indicators button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 5px;
+        }
+
+        .badge {
+            padding: 6px 10px;
+            margin: 2px;
+            font-size: 12px;
+        }
+        .badge-success {
+            background-color: #28a745;
+        }
+        .badge-info {
+            background-color: #17a2b8;
+        }
+        .badge-danger {
+            background-color: #dc3545;
+        }
     </style>
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand" href="<?php echo BASE_URL; ?>">
-            <i class="fas fa-book-reader mr-2"></i>
-            Rumah baca
+<nav class="navbar navbar-expand-lg bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img src="assets/logo-rumahbaca.png" alt="Logo" class="brand-logo">
+            <span class="brand-text"></span>
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="<?php echo BASE_URL; ?>">Beranda</a>
+                <li class="nav-item active">
+                <a class="nav-link" href="<?php echo BASE_URL; ?>">Beranda</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="<?php echo BASE_URL; ?>/public/catalog.php">Katalog</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://pelindo.co.id/port/pelabuhan-tanjung-perak" target="_blank">Tentang Kami</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link btn btn-primary px-3 text-light" href="<?php echo BASE_URL; ?>/login.php">Login</a>
@@ -100,33 +282,47 @@ $reviews_result = mysqli_query($conn, $reviews_query);
     <div class="row">
         <!-- Kolom Kiri - Gambar dan Rating Summary -->
         <div class="col-md-4">
-            <!-- Gambar Buku -->
-            <div class="card shadow-sm">
-                <img src="<?php echo BASE_URL; ?>/image/buku/<?php echo $buku['gambar']; ?>" 
-                     class="card-img-top" alt="<?php echo $buku['nama_buku']; ?>"
-                     style="height: 400px; object-fit: cover;">
-                
-                <!-- Rating Summary Box -->
-                <div class="card-body text-center">
-                    <h5 class="card-title">Rating Rata-rata</h5>
-                    <div class="display-4 font-weight-bold text-warning mb-2">
-                        <?php echo number_format($avg_rating, 1); ?>
-                    </div>
-                    <div class="rating-stars mb-2">
-                        <?php
-                        for($i = 1; $i <= 5; $i++) {
-                            if($i <= $avg_rating) {
-                                echo '<i class="fas fa-star fa-lg text-warning"></i>';
-                            } else {
-                                echo '<i class="far fa-star fa-lg text-warning"></i>';
-                            }
-                        }
-                        ?>
-                    </div>
-                    <p class="text-muted mb-0">
-                        Berdasarkan <?php echo $rating_data['total_rating']; ?> ulasan
-                    </p>
+            <?php
+            // Cari file gambar yang sesuai
+            $gambar_id = $buku['gambar'] ?? '';
+            $gambar_path = "../image/buku/default.jpg"; // Default image
+            
+            if(!empty($gambar_id)) {
+                // Coba cari file dengan pola nama yang sesuai
+                $files = glob("../image/buku/{$gambar_id}*");
+                if(!empty($files)) {
+                    $gambar_path = $files[0]; // Ambil file pertama yang ditemukan
+                } else {
+                    // Jika tidak ditemukan, coba cari dengan pola lain
+                    $files2 = glob("../image/buku/*{$gambar_id}*");
+                    if(!empty($files2)) {
+                        $gambar_path = $files2[0];
+                    }
+                }
+            }
+            ?>
+            <img src="<?php echo $gambar_path; ?>" class="img-fluid rounded" alt="Cover Buku">
+            
+            <!-- Rating Summary Box -->
+            <div class="card-body text-center">
+                <h5 class="card-title">Rating Rata-rata</h5>
+                <div class="display-4 font-weight-bold text-warning mb-2">
+                    <?php echo number_format($avg_rating, 1); ?>
                 </div>
+                <div class="rating-stars mb-2">
+                    <?php
+                    for($i = 1; $i <= 5; $i++) {
+                        if($i <= $avg_rating) {
+                            echo '<i class="fas fa-star fa-lg text-warning"></i>';
+                        } else {
+                            echo '<i class="far fa-star fa-lg text-warning"></i>';
+                        }
+                    }
+                    ?>
+                </div>
+                <p class="text-muted mb-0">
+                    Berdasarkan <?php echo $rating_data['total_rating']; ?> ulasan
+                </p>
             </div>
         </div>
 
@@ -321,27 +517,34 @@ $reviews_result = mysqli_query($conn, $reviews_query);
 </div>
 
 <!-- Footer -->
-<footer class="bg-dark text-white py-4">
+<footer class="text-light py-4" style="background: #0067b0;">
     <div class="container">
         <div class="row">
             <div class="col-md-4">
-                <h5>Perpustakaan Digital</h5>
-                <p class="text-muted">Akses ribuan koleksi buku digital dengan mudah dan cepat.</p>
+                <h5>Kantor Pusat</h5>
+                <p class="text-light">PT Pelabuhan Indonesia (Persero)
+                Pelindo Tower, Jl. Yos Sudarso No.9, Jakarta Utara 14230</p>
             </div>
             <div class="col-md-4">
                 <h5>Link Cepat</h5>
                 <ul class="list-unstyled">
-                    <li><a href="<?php echo BASE_URL; ?>" class="text-muted">Beranda</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>/public/catalog.php" class="text-muted">Katalog</a></li>
+                    <li><a href="#" class="text-light">Beranda</a></li>
+                    <li><a href="<?php echo BASE_URL; ?>/public/catalog.php" class="text-light">Katalog</a></li>
+                    <li><a href="https://pelindo.co.id/port/pelabuhan-tanjung-perak" class="text-light" target="_blank">Tentang Kami</a></li>
                 </ul>
             </div>
             <div class="col-md-4">
                 <h5>Hubungi Kami</h5>
-                <p class="text-muted">
+                <p class="text-lgiht">
                     <i class="fas fa-envelope mr-2"></i> info@perpustakaan.com<br>
-                    <i class="fas fa-phone mr-2"></i> (021) 1234567
+                    <i class="fas fa-phone mr-2"></i> (021) 1234567<br>
+                    <i class="fas fa-map-marker-alt mr-2"></i> Jl. Perpustakaan No. 1
                 </p>
             </div>
+        </div>
+        <hr class="bg-light">
+        <div class="text-center text-light">
+            <small>&copy; 2025 Rumah Baca. All rights reserved.</small>
         </div>
     </div>
 </footer>

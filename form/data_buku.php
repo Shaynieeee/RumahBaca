@@ -34,7 +34,7 @@
 <div id="page-wrapper">
 	<div class="row">
                 <div class="col-lg-12">
-                    <h1 class="page-header">Data Buku</h1>
+                    <h1 class="page-header"></h1>
                 </div>
                 <!-- /.col-lg-12 -->
 	</div>
@@ -91,7 +91,7 @@
 	<div class="row">
 		<div class="col-lg-12">
 		<table width="100%" class="table table-striped table-bordered table-hover">
-			<tr>
+			<tr  style="background: #0067b0; color:#fff;">
 				<th>No</th>
 				<th>Cover</th>
 				<th>Judul Buku</th>
@@ -125,15 +125,29 @@
 					<tr>
 						<td><?php echo $no;?></td>
 						<td>
-							<?php if(!empty($tampil['gambar'])): ?>
-								<img src="../image/buku/<?php echo htmlspecialchars($tampil['gambar']); ?>?v=<?php echo time(); ?>" 
-									 alt="Cover" 
-									 class="img-thumbnail" 
-									 style="max-height: 80px; max-width: 60px;"
-									 onerror="this.onerror=null; this.src='../image/buku/default.jpg'; console.error('Error loading image: <?php echo htmlspecialchars($tampil['gambar']); ?>');">
-							<?php else: ?>
-								<span>No Cover</span>
-							<?php endif; ?>
+							<?php
+							$gambar_id = $tampil['gambar'];
+							$gambar_path = "../image/buku/default.jpg"; // Default image
+							
+							if(!empty($gambar_id)) {
+								// Coba cari file dengan pola nama yang sesuai
+								$pattern = "../image/buku/{$gambar_id}*";
+								$files = glob($pattern);
+								
+								if(!empty($files)) {
+									$gambar_path = $files[0]; // Ambil file pertama yang ditemukan
+								} else {
+									// Jika tidak ditemukan, coba cari dengan pola lain
+									$pattern2 = "../image/buku/*{$gambar_id}*";
+									$files2 = glob($pattern2);
+									
+									if(!empty($files2)) {
+										$gambar_path = $files2[0];
+									}
+								}
+							}
+							?>
+							<img src="<?php echo $gambar_path; ?>" alt="Cover" style="width: 50px; height: 70px; object-fit: cover;">
 						</td>
 						<td><?php echo $tampil['nama_buku']; ?></td>
 						<td><?php echo $tampil['jenis']; ?></td>

@@ -17,6 +17,19 @@ if(isset($_GET['jenis']) && !empty($_GET['jenis'])) {
     $jenis = mysqli_real_escape_string($conn, $_GET['jenis']);
     $where .= " AND jenis = '$jenis'";
 }
+if(isset($_GET['ketersediaan']) && !empty($_GET['ketersediaan'])) {
+    switch($_GET['ketersediaan']) {
+        case 'online':
+            $where .= " AND (file_buku IS NOT NULL AND file_buku != '') ";
+            break;
+        case 'offline':
+            $where .= " AND stok > 0 ";
+            break;
+        case 'both':
+            $where .= " AND ((file_buku IS NOT NULL AND file_buku != '') AND stok > 0) ";
+            break;
+    }
+}
 
 // Get total records for pagination
 $total_query = "SELECT COUNT(*) as total FROM t_buku WHERE $where";
@@ -52,31 +65,63 @@ $total_pages = ceil($total_row['total'] / $limit);
             height: 250px;
             object-fit: cover;
         }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+
+        .brand-logo {
+            height: 40px;
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .brand-text {
+            color: #ffffff;
+            font-family: 'poppins';
+            font-size: 70px;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        .badge {
+            padding: 6px 10px;
+            margin: 2px;
+            font-size: 12px;
+        }
+        .badge-success {
+            background-color: #28a745;
+        }
+        .badge-info {
+            background-color: #17a2b8;
+        }
+        .badge-danger {
+            background-color: #dc3545;
+        }
     </style>
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand" href="<?php echo BASE_URL; ?>">
-        <img src="../public/assets/pelindo-logo.png" alt="Logo Pelindo" height="30" class="d-inline-block align-middle me-2">
-            Rumah Baca
+<nav class="navbar navbar-expand-lg bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+        <img src="assets/logo-rumahbaca.png" alt="Logo" class="brand-logo">
+        <span class="brand-text"></span>
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
+                <li class="nav-item active">
                     <a class="nav-link" href="<?php echo BASE_URL; ?>">Beranda</a>
                 </li>
                 <li class="nav-item active">
                     <a class="nav-link" href="<?php echo BASE_URL; ?>/public/catalog.php">Katalog</a>
                 </li>
-                <!-- <li class="nav-item">
-                    <a class="nav-link" href="<?php echo BASE_URL; ?>/about.php">Tentang</a>
-                </li> -->
+                <li class="nav-item">
+                    <a class="nav-link" href="https://pelindo.co.id/port/pelabuhan-tanjung-perak" target="_blank">Tentang Kami</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link btn btn-primary px-3 text-light" href="<?php echo BASE_URL; ?>/login.php">Login</a>
                 </li>
@@ -96,16 +141,24 @@ $total_pages = ceil($total_row['total'] / $limit);
                            value="<?php echo isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : ''; ?>">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <select name="jenis" class="form-control">
+                    <select name="jenis" class="form-control form-control-lg">
                         <option value="">Semua Kategori</option>
                         <?php
-                        $query = "SELECT DISTINCT jenis FROM t_buku ORDER BY jenis";
+                        $query = "SELECT nama_kategori FROM t_kategori_buku ORDER BY nama_kategori";
                         $result = mysqli_query($conn, $query);
                         while($row = mysqli_fetch_assoc($result)) {
-                            $selected = (isset($_GET['jenis']) && $_GET['jenis'] == $row['jenis']) ? 'selected' : '';
-                            echo "<option value='".$row['jenis']."' $selected>".$row['jenis']."</option>";
+                            $selected = (isset($_GET['jenis']) && $_GET['jenis'] == $row['nama_kategori']) ? 'selected' : '';
+                            echo "<option value='".$row['nama_kategori']."' $selected>".$row['nama_kategori']."</option>";
                         }
                         ?>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <select name="ketersediaan" class="form-control form-control-lg">
+                        <option value="">Semua Ketersediaan</option>
+                        <option value="online" <?php echo (isset($_GET['ketersediaan']) && $_GET['ketersediaan'] == 'online') ? 'selected' : ''; ?>>Buku Online</option>
+                        <option value="offline" <?php echo (isset($_GET['ketersediaan']) && $_GET['ketersediaan'] == 'offline') ? 'selected' : ''; ?>>Buku Offline</option>
+                        <option value="both" <?php echo (isset($_GET['ketersediaan']) && $_GET['ketersediaan'] == 'both') ? 'selected' : ''; ?>>Online & Offline</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -137,7 +190,26 @@ $total_pages = ceil($total_row['total'] / $limit);
         ?>
             <div class="col-md-3 mb-4">
                 <div class="card h-100">
-                    <img src="../image/buku/<?php echo htmlspecialchars($row['gambar'] ?? 'default.jpg'); ?>" 
+                    <?php
+                    // Cari file gambar yang sesuai
+                    $gambar_id = $row['gambar'] ?? '';
+                    $gambar_path = "../image/buku/default.jpg"; // Default image
+                    
+                    if(!empty($gambar_id)) {
+                        // Coba cari file dengan pola nama yang sesuai
+                        $files = glob("../image/buku/{$gambar_id}*");
+                        if(!empty($files)) {
+                            $gambar_path = $files[0]; // Ambil file pertama yang ditemukan
+                        } else {
+                            // Jika tidak ditemukan, coba cari dengan pola lain
+                            $files2 = glob("../image/buku/*{$gambar_id}*");
+                            if(!empty($files2)) {
+                                $gambar_path = $files2[0];
+                            }
+                        }
+                    }
+                    ?>
+                    <img src="<?php echo $gambar_path; ?>" 
                          class="card-img-top" alt="<?php echo htmlspecialchars($row['nama_buku'] ?? 'Tidak ada judul'); ?>"
                          style="height: 250px; object-fit: cover;">
                     <div class="card-body d-flex flex-column">
@@ -148,6 +220,22 @@ $total_pages = ceil($total_row['total'] / $limit);
                                 <i class="fa fa-calendar"></i> <?php echo htmlspecialchars($row['tahun_terbit'] ?? 'Tidak ada tahun'); ?>
                             </small>
                         </p>
+                        <div class="mt-2">
+                            <?php if(!empty($row['file_buku'])): ?>
+                                <?php if($row['stok'] > 0): ?>
+                                    <span class="badge badge-success">Tersedia Offline</span>
+                                    <span class="badge badge-info">Tersedia Online</span>
+                                <?php else: ?>
+                                    <span class="badge badge-info">Tersedia Hanya Online</span>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <?php if($row['stok'] > 0): ?>
+                                    <span class="badge badge-success">Tersedia Offline</span>
+                                <?php else: ?>
+                                    <span class="badge badge-danger">Tidak Tersedia</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
                         <div class="btn-group mt-auto w-100">
                             <!-- <a href="baca-buku.php?id=<?php echo $row['id_t_buku']; ?>" 
                                class="btn btn-primary btn-sm">
@@ -182,6 +270,7 @@ $total_pages = ceil($total_row['total'] / $limit);
                             <a class="page-link" href="?page=<?php echo $i; ?><?php 
                                 echo isset($_GET['keyword']) ? '&keyword='.urlencode($_GET['keyword']) : ''; 
                                 echo isset($_GET['jenis']) ? '&jenis='.urlencode($_GET['jenis']) : ''; 
+                                echo isset($_GET['ketersediaan']) ? '&ketersediaan='.urlencode($_GET['ketersediaan']) : ''; 
                             ?>"><?php echo $i; ?></a>
                         </li>
                     <?php endfor; ?>
@@ -192,33 +281,34 @@ $total_pages = ceil($total_row['total'] / $limit);
     <?php endif; ?>
 </div>
 
-<!-- Footer -->
-<footer class="bg-dark text-white py-4">
+<<!-- Footer -->
+<footer class="text-light py-4" style="background: rgb(0, 103, 176);">
     <div class="container">
         <div class="row">
             <div class="col-md-4">
-                <h5>Perpustakaan Digital</h5>
-                <p class="text-muted">Akses ribuan koleksi buku digital dengan mudah dan cepat.</p>
+                <h5>Kantor Pusat</h5>
+                <p class="text-light">PT Pelabuhan Indonesia (Persero)
+                Pelindo Tower, Jl. Yos Sudarso No.9, Jakarta Utara 14230</p>
             </div>
             <div class="col-md-4">
                 <h5>Link Cepat</h5>
                 <ul class="list-unstyled">
-                    <li><a href="<?php echo BASE_URL; ?>" class="text-muted">Beranda</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>/public/catalog.php" class="text-muted">Katalog</a></li>
-                    <!-- <li><a href="<?php echo BASE_URL; ?>/about.php" class="text-muted">Tentang Kami</a></li> -->
+                    <li><a href="<?php echo BASE_URL; ?>/public/landing.php" class="text-light">Beranda</a></li>
+                    <li><a href="<?php echo BASE_URL; ?>/public/catalog.php" class="text-light">Katalog</a></li>
+                    <li><a href="https://pelindo.co.id/port/pelabuhan-tanjung-perak" class="text-light" target="_blank">Tentang Kami</a></li>
                 </ul>
             </div>
             <div class="col-md-4">
                 <h5>Hubungi Kami</h5>
-                <p class="text-muted">
+                <p class="text-lgiht">
                     <i class="fas fa-envelope mr-2"></i> info@perpustakaan.com<br>
                     <i class="fas fa-phone mr-2"></i> (021) 1234567<br>
                     <i class="fas fa-map-marker-alt mr-2"></i> Jl. Perpustakaan No. 1
                 </p>
             </div>
         </div>
-        <hr class="bg-secondary">
-        <div class="text-center text-muted">
+        <hr class="bg-light">
+        <div class="text-center text-light">
             <small>&copy; 2025 Rumah Baca. All rights reserved.</small>
         </div>
     </div>

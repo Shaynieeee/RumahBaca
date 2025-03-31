@@ -20,10 +20,18 @@ if($row['id_p_role'] != 1) {
 
 include("header.php");
 
-// Ambil data admin
-$sql = "SELECT * FROM t_account WHERE username = 'adm'";
-$result = mysqli_query($db, $sql);
+// Ambil data admin berdasarkan session user yang login
+$sql = "SELECT * FROM t_account WHERE username = ?";
+$stmt = mysqli_prepare($db, $sql);
+mysqli_stmt_bind_param($stmt, "s", $usersession);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 $data = mysqli_fetch_array($result, MYSQLI_ASSOC);
+
+if (!$data) {
+    echo "<script>alert('Data admin tidak ditemukan!'); window.location.href='dashboard.php';</script>";
+    exit;
+}
 
 // Proses update
 if(isset($_POST['submit'])) {
@@ -31,13 +39,17 @@ if(isset($_POST['submit'])) {
     $email = mysqli_real_escape_string($db, $_POST['email']);
     $update_date = date('Y-m-d H:i:s');
     
+    // Update data berdasarkan username session
     $sql = "UPDATE t_account SET 
-            username = '$username',
-            email = '$email',
-            update_date = '$update_date'
-            WHERE username = 'adm'";
+            username = ?,
+            email = ?,
+            update_date = ?
+            WHERE username = ?";
             
-    if(mysqli_query($db, $sql)) {
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "ssss", $username, $email, $update_date, $usersession);
+    
+    if(mysqli_stmt_execute($stmt)) {
         $_SESSION['login_user'] = $username; // Update session jika username berubah
         echo "<script>
                 alert('Data berhasil diupdate!');
@@ -62,14 +74,14 @@ if(isset($_POST['submit'])) {
                 <div class="form-group">
                     <label class="control-label col-sm-4">Username</label>
                     <div class="col-sm-8">
-                        <input type="text" class="form-control" name="username" value="<?php echo $data['username']; ?>" required>
+                        <input type="text" class="form-control" name="username" value="<?php echo htmlspecialchars($data['username']); ?>" required>
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label class="control-label col-sm-4">Email</label>
                     <div class="col-sm-8">
-                        <input type="email" class="form-control" name="email" value="<?php echo $data['email']; ?>">
+                        <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars($data['email']); ?>">
                     </div>
                 </div>
                 
@@ -84,4 +96,3 @@ if(isset($_POST['submit'])) {
     </div>
 </div>
 
-<?php include("footer.php"); ?> 

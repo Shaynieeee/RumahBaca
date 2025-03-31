@@ -18,11 +18,23 @@
       if ($captcha_input != $_SESSION['captcha_text']) {
           $error = "CAPTCHA salah, coba lagi.";
       } else {
-          $sql = "SELECT a.*, r.nama_role, COALESCE(s.status, m.status) as user_status 
+          // Query diperbarui untuk mengecek status dengan benar
+          $sql = "SELECT a.*, r.nama_role, 
+                  CASE 
+                      WHEN a.id_p_role = 3 THEN (
+                          SELECT status 
+                          FROM t_anggota 
+                          WHERE id_t_anggota = a.id_t_anggota
+                      )
+                      WHEN a.id_p_role = 2 THEN (
+                          SELECT status 
+                          FROM t_staff 
+                          WHERE id_t_account = a.id_t_account
+                      )
+                      WHEN a.id_p_role = 1 THEN 'Aktif'
+                  END as user_status
                   FROM t_account a
                   JOIN p_role r ON a.id_p_role = r.id_p_role
-                  LEFT JOIN t_staff s ON a.id_t_account = s.id_t_account 
-                  LEFT JOIN t_anggota m ON a.id_t_anggota = m.id_t_anggota
                   WHERE a.username = ?";
           
           $stmt = mysqli_prepare($db, $sql);
@@ -32,11 +44,17 @@
           
           if (mysqli_num_rows($result) == 1) {
               $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
-              if ($row['user_status'] == 'Tidak Aktif') {
+              
+              // Cek status user kecuali untuk admin
+              if ($row['id_p_role'] != 1 && ($row['user_status'] === 'Tidak Aktif' || $row['user_status'] === NULL)) {
                   $error = "Akun Anda telah dinonaktifkan. Silahkan hubungi administrator.";
-              } elseif (password_verify($mypassword, $row['password'])) {
+              } 
+              // Jika status aktif atau admin, verifikasi password
+              elseif (password_verify($mypassword, $row['password'])) {
                   $_SESSION['login_user'] = $myusername;
                   $_SESSION['role'] = $row['id_p_role'];
+                  $_SESSION['id_t_account'] = $row['id_t_account'];
+                  $_SESSION['id_t_anggota'] = $row['id_t_anggota'];
                   
                   header("location: " . ($row['id_p_role'] == 3 ? "form/anggota/dashboard.php" : "form/dashboard.php"));
                   exit();
@@ -51,10 +69,20 @@
       // Reset CAPTCHA setelah pengiriman form
       $_SESSION['captcha_text'] = rand(1000, 9999);
    }
+
+   // Cek jika ada error dari redirect
+   if(isset($_GET['error']) && $_GET['error'] == 'inactive') {
+       $error = "Akun Anda telah dinonaktifkan. Silahkan hubungi administrator.";
+   }
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
+
+    <!-- Multiple favicon sizes -->
+    <link rel="icon" type="image/png" sizes="32x32" href="public/assets/pelindo-logo.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="public/assets/pelindo-logo.png">
+    <link rel="shortcut icon" href="public/assets/pelindo-logo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Rumah Baca</title>

@@ -9,7 +9,7 @@ if(!isset($_SESSION['login_user'])){
     exit;
 }
 
-require_once '../setting/koneksi.php';
+require_once __DIR__ . '/../setting/koneksi.php';
 
 $usersession = $_SESSION['login_user'];
 $sql = "SELECT id_p_role FROM t_account WHERE username = '$usersession'";
@@ -18,6 +18,23 @@ $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
 
 // Simpan role di variabel
 $role = $row['id_p_role'];
+
+// Cek keterlambatan pengembalian untuk admin/staff
+if($role == 1 || $role == 2) {
+    $sql_keterlambatan = "SELECT p.id_t_peminjaman, a.nama, a.id_t_anggota, p.tgl_kembali, 
+                         GROUP_CONCAT(b.nama_buku SEPARATOR ', ') as daftar_buku,
+                         DATEDIFF(CURDATE(), p.tgl_kembali) as hari_terlambat
+                         FROM t_peminjaman p 
+                         JOIN t_anggota a ON p.id_t_anggota = a.id_t_anggota 
+                         JOIN t_detil_pinjam dp ON p.id_t_peminjaman = dp.id_t_peminjaman
+                         JOIN t_buku b ON dp.id_t_buku = b.id_t_buku
+                         WHERE p.status = 'Dipinjam' 
+                         AND CURDATE() > p.tgl_kembali
+                         GROUP BY p.id_t_peminjaman";
+    
+    $result_keterlambatan = mysqli_query($db, $sql_keterlambatan);
+    $jumlah_keterlambatan = mysqli_num_rows($result_keterlambatan);
+}
 
 // Jangan redirect di sini, biarkan tampilan menyesuaikan role
 ?>
@@ -169,7 +186,7 @@ $role = $row['id_p_role'];
                     <!-- Menu Buku -->
                     <li class="parent">
                         <a href="#">
-                            <span class="glyphicon glyphicon-list-alt" data-toggle="collapse" href="#sub-item-2">&nbsp;Buku</span><span data-toggle="collapse" href="#sub-item-2" class="icon pull-right"><em class="glyphicon glyphicon-arrow-down"></em></span> 
+                            <span class="glyphicon glyphicon-book" data-toggle="collapse" href="#sub-item-2">&nbsp;Buku</span><span data-toggle="collapse" href="#sub-item-2" class="icon pull-right"><em class="glyphicon glyphicon-arrow-down"></em></span> 
                         </a>
                         <ul class="children collapse" id="sub-item-2">
                             <li><a href="data_buku.php">Data Buku</a></li>
@@ -208,7 +225,9 @@ $role = $row['id_p_role'];
                     <?php endif; ?>
                     
                     <!-- Menu Rating -->
-                    <li><a href="data_rating.php"><span class="glyphicon glyphicon-star"></span>&nbsp;Rating</a></li>
+                    <!-- <li><a href="data_rating.php"><span class="glyphicon glyphicon-star"></span>&nbsp;Rating</a></li> -->
+                    <li><a href="pengaturan.php"><span class="glyphicon glyphicon-cog"></span>&nbsp;Pengaturan</a></li>
+
 
                     <!-- Menu Laporan -->
                     <!-- <li>
@@ -240,9 +259,11 @@ $role = $row['id_p_role'];
         <div class="navbar-header">
             <!-- Logo Pelindo di sebelah kiri -->
             <a class="navbar-brand" href="index.php" style="padding: 10px 15px;">
-                <img src="../public/assets/pelindo-logo.png" alt="Logo Pelindo" height="30" style="display: inline-block; vertical-align: middle;">
-                <span style="margin-left: 10px;">Rumah baca</span>
+                <img src="../public/assets/logo pelindo.png" alt="Logo Pelindo" height="30" style="display: inline-block; vertical-align: middle;">
+                <span style="margin-left: 10px;"></span>
             </a>
+            
+
             
             <!-- Tombol toggle untuk mobile -->
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -282,6 +303,72 @@ $role = $row['id_p_role'];
         </div>
     </div>
 </nav>
+
+<!-- Modal Keterlambatan -->
+<?php if(($role == 1 || $role == 2) && $jumlah_keterlambatan > 0): ?>
+<div class="modal fade" id="modalKeterlambatan" tabindex="-1" role="dialog" aria-labelledby="modalKeterlambatanLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="modalKeterlambatanLabel">Daftar Keterlambatan Pengembalian</h4>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nama Anggota</th>
+                                <th>Buku</th>
+                                <th>Tanggal Kembali</th>
+                                <th>Keterlambatan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while($row_keterlambatan = mysqli_fetch_assoc($result_keterlambatan)): ?>
+                            <tr>
+                                <td><?php echo $row_keterlambatan['nama']; ?></td>
+                                <td><?php echo $row_keterlambatan['daftar_buku']; ?></td>
+                                <td><?php echo date('d/m/Y', strtotime($row_keterlambatan['tgl_kembali'])); ?></td>
+                                <td><?php echo $row_keterlambatan['hari_terlambat']; ?> hari</td>
+                                <td>
+                                    <button type="button" class="btn btn-warning btn-sm" onclick="kirimPengingat(<?php echo $row_keterlambatan['id_t_peminjaman']; ?>, <?php echo $row_keterlambatan['id_t_anggota']; ?>)">
+                                        <i class="fa fa-envelope"></i> Kirim Pengingat
+                                    </button>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- Script untuk mengirim pengingat -->
+<script>
+function kirimPengingat(idPeminjaman, idAnggota) {
+    if(confirm('Apakah Anda yakin ingin mengirim pengingat dan menonaktifkan akun anggota ini?')) {
+        $.ajax({
+            url: 'proses_kirim_pengingat.php',
+            type: 'POST',
+            data: {
+                id_peminjaman: idPeminjaman,
+                id_anggota: idAnggota
+            },
+            success: function(response) {
+                alert(response);
+            },
+            error: function() {
+                alert('Terjadi kesalahan saat mengirim pengingat.');
+            }
+        });
+    }
+}
+</script>
 
 <!-- Pastikan jQuery dan Bootstrap JS dimuat dengan benar -->
 <script src="../assets/vendor/jquery/jquery.min.js"></script>

@@ -28,12 +28,35 @@ $update_status = "UPDATE t_peminjaman
 				  WHERE tgl_kembali < CURDATE() 
 				  AND status = 'Dipinjam'";
 mysqli_query($db, $update_status);
+
+// Fungsi untuk menghitung denda
+function hitungDenda($db, $tgl_kembali, $status, $harga_buku) {
+    $total_denda = 0;
+    
+    // Ambil pengaturan denda
+    $sql_denda = "SELECT * FROM t_pengaturan_denda";
+    $result_denda = mysqli_query($db, $sql_denda);
+    $pengaturan_denda = [];
+    while($row = mysqli_fetch_assoc($result_denda)) {
+        $pengaturan_denda[$row['jenis_denda']] = $row['nilai_denda'];
+    }
+    
+    // Hitung denda keterlambatan jika status masih Belum Kembali
+    if($status == 'Belum Kembali' && $tgl_kembali < date('Y-m-d')) {
+        $selisih = strtotime(date('Y-m-d')) - strtotime($tgl_kembali);
+        $hari_terlambat = floor($selisih / (60 * 60 * 24));
+        $denda_per_hari = isset($pengaturan_denda['terlambat']) ? $pengaturan_denda['terlambat'] : 2000;
+        $total_denda += ($hari_terlambat * $denda_per_hari);
+    }
+    
+    return $total_denda;
+}
 ?>
 
 <div id="page-wrapper">
     <div class="row">
         <div class="col-lg-12">
-            <h1 class="page-header">Data Peminjaman</h1>
+            <h1 class="page-header"></h1>
         </div>
     </div>
 
@@ -83,7 +106,7 @@ mysqli_query($db, $update_status);
 	<div class="row">
 		<div class="col-lg-12">
 			<table class="table table-striped table-bordered table-hover">
-				<thead>
+				<thead style="background: #0067b0; color:#fff;">
 					<tr>
 						<th>No</th>
 						<th>No Peminjaman</th>
@@ -104,66 +127,64 @@ mysqli_query($db, $update_status);
 				$max_results = 10;
 				$from = (($page * $max_results) - $max_results);
 
-				$sql = "SELECT p.*, s.nama as nama_staff, a.no_anggota, a.nama as nama_anggota,
-						(SELECT COUNT(DISTINCT id_t_buku) 
-						 FROM t_detil_pinjam 
-						 WHERE id_t_peminjaman = p.id_t_peminjaman) as jum_buku,
-						(SELECT GROUP_CONCAT(DISTINCT kondisi SEPARATOR ', ') 
-						 FROM t_detil_pinjam dp 
-						 WHERE dp.id_t_peminjaman = p.id_t_peminjaman) as kondisi_buku,
-						(SELECT SUM(denda) 
-						 FROM t_detil_pinjam dp 
-						 WHERE dp.id_t_peminjaman = p.id_t_peminjaman) as total_denda
-						FROM t_peminjaman p 
+				// Query untuk mengambil data peminjaman
+				$sql = "SELECT p.*, dp.id_t_buku, dp.qty, dp.denda, dp.kondisi,
+						b.nama_buku, b.penulis, b.harga,
+						a.nama as nama_anggota, a.no_anggota,
+						DATEDIFF(p.tgl_kembali, CURDATE()) as sisa_hari,
+						s.nama as nama_staff
+						FROM t_peminjaman p
+						JOIN t_anggota a ON p.id_t_anggota = a.id_t_anggota 
+						JOIN t_detil_pinjam dp ON p.id_t_peminjaman = dp.id_t_peminjaman
+						JOIN t_buku b ON dp.id_t_buku = b.id_t_buku
 						LEFT JOIN t_staff s ON p.id_t_staff = s.id_t_staff
-						LEFT JOIN t_anggota a ON p.id_t_anggota = a.id_t_anggota
-						$where 
-						ORDER BY p.id_t_peminjaman DESC 
+						$where
+						ORDER BY p.tgl_pinjam DESC, p.id_t_peminjaman DESC
 						LIMIT $from, $max_results";
-				
+
 				$result = mysqli_query($db, $sql);
 				$jum_data = mysqli_num_rows($result);
 
 				if($jum_data > 0) {
 					$no = $from + 1;
 					while($row = mysqli_fetch_assoc($result)) {
+						$total_denda = hitungDenda($db, $row['tgl_kembali'], $row['status'], $row['harga']);
+						
 						?>
 						<tr>
 							<td><?php echo $no++; ?></td>
 							<td><?php echo $row['no_peminjaman']; ?></td>
 							<td><?php echo htmlspecialchars($row['nama_anggota']); ?></td>
 							<td><?php 
-								// Cek apakah ada id_t_staff
-								if (!empty($row['id_t_staff'])) {
-									// Jika ada id staff, tampilkan nama staff dari tabel t_staff
-									$staff_id = $row['id_t_staff'];
-									$sql_staff = "SELECT nama FROM t_staff WHERE id_t_staff = ?";
-									$stmt = mysqli_prepare($db, $sql_staff);
-									mysqli_stmt_bind_param($stmt, "i", $staff_id);
-									mysqli_stmt_execute($stmt);
-									$result_staff = mysqli_stmt_get_result($stmt);
-									$staff = mysqli_fetch_assoc($result_staff);
-									
-									if ($staff) {
-										echo "Staff-" . htmlspecialchars($staff['nama']);
-									}
+								if (!empty($row['nama_staff'])) {
+									echo "Staff-" . htmlspecialchars($row['nama_staff']);
 								} else {
-									// Jika id_t_staff kosong, berarti yang input adalah admin
-									echo "Admin-" . htmlspecialchars($row['nama_staff'] ?? $_SESSION['login_user']);
+									echo "Admin-" . htmlspecialchars($_SESSION['login_user']);
 								}
 							?></td>
 							<td><?php echo date('d/m/Y', strtotime($row['tgl_pinjam'])); ?></td>
 							<td><?php echo $row['tgl_kembali'] ? date('d/m/Y', strtotime($row['tgl_kembali'])) : '-'; ?></td>
-							<td><?php echo $row['jum_buku']; ?></td>
-							<td><?php echo $row['status']; ?></td>
+							<td><?php echo $row['qty']; ?></td>
 							<td><?php 
-								if($row['status'] == 'Dipinjam' || $row['status'] == 'Belum Kembali') {
-									echo "-";
+								$status_class = '';
+								$sisa_hari = $row['sisa_hari'];
+								
+								if($row['status'] == 'Belum Kembali') {
+									$status_class = 'text-danger';
+								} else if($sisa_hari <= 2 && $row['status'] == 'Dipinjam') {
+									$status_class = 'text-warning';
+								}
+								
+								echo "<span class='" . $status_class . "'>" . $row['status'] . "</span>";
+							?></td>
+							<td><?php 
+								if($row['status'] == 'Sudah Kembali') {
+									echo isset($row['kondisi']) ? $row['kondisi'] : "Baik";
 								} else {
-									echo $row['kondisi_buku'] ?: 'Belum dikembalikan'; 
+									echo '-';
 								}
 							?></td>
-							<td><?php echo $row['total_denda'] ? 'Rp ' . number_format($row['total_denda'],0,',','.') : '-'; ?></td>
+							<td>Rp <?php echo number_format($total_denda, 0, ',', '.'); ?></td>
 							<td>
 								<a href="edit_detil_pinjam.php?id=<?php echo $row['id_t_peminjaman']; ?>" 
 								   class="btn btn-info action-btn" 
@@ -193,9 +214,10 @@ mysqli_query($db, $update_status);
 			<?php if($jum_data > 0): ?>
 				<div class="text-center">
 					<?php
-					$total_sql = "SELECT COUNT(*) as total FROM t_peminjaman p 
+					$total_sql = "SELECT COUNT(DISTINCT p.id_t_peminjaman) as total 
+								FROM t_peminjaman p
+								JOIN t_anggota a ON p.id_t_anggota = a.id_t_anggota 
 								LEFT JOIN t_staff s ON p.id_t_staff = s.id_t_staff
-								LEFT JOIN t_anggota a ON p.id_t_anggota = a.id_t_anggota 
 								$where";
 					$total_results = mysqli_query($db, $total_sql);
 					$row = mysqli_fetch_assoc($total_results);
