@@ -26,7 +26,7 @@ mysqli_stmt_bind_param($stmt, "i", $id_peminjaman);
 mysqli_stmt_execute($stmt);
 $result_detail = mysqli_stmt_get_result($stmt);
 
-// Ambil pengaturan denda
+// Ambil pengaturan denda dari database
 $sql_denda = "SELECT * FROM t_pengaturan_denda";
 $result_denda = mysqli_query($db, $sql_denda);
 $pengaturan_denda = [];
@@ -66,10 +66,11 @@ if(isset($_POST['submit'])) {
         $data_pinjam = mysqli_fetch_assoc($result);
         
         // Hitung denda keterlambatan
-            $denda_terlambat = 0;
+        $denda_terlambat = 0;
+        $nilai_denda_terlambat = isset($pengaturan_denda['terlambat']) ? $pengaturan_denda['terlambat'] : 5000;
         if ($data_pinjam['hari_terlambat'] > 0) {
-            $denda_terlambat = $data_pinjam['hari_terlambat'] * 2000; // Rp 2.000 per hari
-        }
+            $denda_terlambat = $data_pinjam['hari_terlambat'] * $nilai_denda_terlambat;
+        }   
         
         // Total denda = denda keterlambatan + denda kondisi buku
         $total_denda = $denda_terlambat + $denda;
@@ -175,6 +176,10 @@ if(isset($_POST['submit'])) {
                             <td><?php echo date('d/m/Y', strtotime($data_pinjam['tgl_pinjam'])); ?></td>
                         </tr>
                         <tr>
+                            <th>Tanggal Harus Kembali</th>
+                            <td><?php echo date('d/m/Y', strtotime($data_pinjam['tgl_kembali'])); ?></td>
+                        </tr>
+                        <tr>
                             <th>Status Saat Ini</th>
                             <td><?php echo $data_pinjam['status']; ?></td>
                         </tr>
@@ -268,17 +273,23 @@ if(isset($_POST['submit'])) {
 $(document).ready(function() {
     // Fungsi untuk menghitung denda
     function hitungDenda(kondisi, harga) {
-        var dendaRusak = <?php echo isset($pengaturan_denda['rusak']) ? $pengaturan_denda['rusak'] : 30; ?>;
+        // Ambil nilai denda langsung dari database melalui PHP
+        var dendaRusak = <?php echo isset($pengaturan_denda['rusak']) ? $pengaturan_denda['rusak'] : 10; ?>;
         var dendaHilang = <?php echo isset($pengaturan_denda['hilang']) ? $pengaturan_denda['hilang'] : 100; ?>;
         
+        var dendaKondisi = 0;
         switch(kondisi) {
             case 'Rusak':
-                return Math.round(harga * (dendaRusak/100));
+                dendaKondisi = Math.round(harga * (dendaRusak/100));
+                break;
             case 'Hilang':
-                return Math.round(harga * (dendaHilang/100));
+                dendaKondisi = Math.round(harga * (dendaHilang/100));
+                break;
             default:
-                return 0;
+                dendaKondisi = 0;
         }
+        
+        return dendaKondisi;
     }
 
     // Event handler untuk perubahan kondisi
@@ -287,32 +298,13 @@ $(document).ready(function() {
         var harga = parseInt($(this).data('harga'));
         var dendaInput = $(this).data('denda-input');
         
-        var denda = hitungDenda(kondisi, harga);
-        $(dendaInput).val(denda);
+        var dendaKondisi = hitungDenda(kondisi, harga);
+        $(dendaInput).val(dendaKondisi);
     });
 
     // Hitung denda awal saat halaman dimuat
     $('.kondisi-select').each(function() {
         $(this).trigger('change');
-    });
-
-    // Event handler untuk perubahan status peminjaman
-    $('select[name="status"]').change(function() {
-        var status = $(this).val();
-        var isActive = (status == 'Dipinjam' || status == 'Belum Kembali');
-        
-        // Update tampilan form berdasarkan status
-        $('.kondisi-select').each(function() {
-            var container = $(this).closest('.col-md-6');
-            if(isActive) {
-                container.find('input[type="text"]').val('-');
-                container.find('textarea').val('-').prop('readonly', true);
-                container.find('input[name="denda[]"]').val('0');
-            } else {
-                container.find('textarea').prop('readonly', false);
-                $(this).trigger('change'); // Recalculate denda
-            }
-        });
     });
 });
 </script>

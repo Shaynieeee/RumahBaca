@@ -29,26 +29,34 @@ $update_status = "UPDATE t_peminjaman
 				  AND status = 'Dipinjam'";
 mysqli_query($db, $update_status);
 
+// Ambil pengaturan denda dari database
+$pengaturan_denda = [];
+$sql_denda = "SELECT * FROM t_pengaturan_denda";
+$result_denda = mysqli_query($db, $sql_denda);
+while($row = mysqli_fetch_assoc($result_denda)) {
+    $pengaturan_denda[$row['jenis_denda']] = $row['nilai_denda'];
+}
+
 // Fungsi untuk menghitung denda
-function hitungDenda($db, $tgl_kembali, $status, $harga_buku) {
+function hitungDenda($row, $pengaturan_denda) {
     $total_denda = 0;
+    $status = $row['status'];
+    $denda_terlambat = isset($pengaturan_denda['terlambat']) ? $pengaturan_denda['terlambat'] : 5000;
+    $kondisi = $row['kondisi'];
+    $harga_buku = $row['harga'];
+    $denda_kondisi = isset($row['denda']) ? $row['denda'] : 0;
     
-    // Ambil pengaturan denda
-    $sql_denda = "SELECT * FROM t_pengaturan_denda";
-    $result_denda = mysqli_query($db, $sql_denda);
-    $pengaturan_denda = [];
-    while($row = mysqli_fetch_assoc($result_denda)) {
-        $pengaturan_denda[$row['jenis_denda']] = $row['nilai_denda'];
+    // Hitung denda keterlambatan untuk semua status
+    if ($row['hari_terlambat'] > 0) {
+        $denda_keterlambatan = $row['hari_terlambat'] * $denda_terlambat;
+        $total_denda += $denda_keterlambatan;
     }
-    
-    // Hitung denda keterlambatan jika status masih Belum Kembali
-    if($status == 'Belum Kembali' && $tgl_kembali < date('Y-m-d')) {
-        $selisih = strtotime(date('Y-m-d')) - strtotime($tgl_kembali);
-        $hari_terlambat = floor($selisih / (60 * 60 * 24));
-        $denda_per_hari = isset($pengaturan_denda['terlambat']) ? $pengaturan_denda['terlambat'] : 2000;
-        $total_denda += ($hari_terlambat * $denda_per_hari);
+
+    // Tambahkan denda kondisi jika status Sudah Kembali
+    if ($status == 'Sudah Kembali' && $kondisi != 'Baik') {
+        $total_denda += $denda_kondisi;
     }
-    
+
     return $total_denda;
 }
 ?>
@@ -131,7 +139,7 @@ function hitungDenda($db, $tgl_kembali, $status, $harga_buku) {
 				$sql = "SELECT p.*, dp.id_t_buku, dp.qty, dp.denda, dp.kondisi,
 						b.nama_buku, b.penulis, b.harga,
 						a.nama as nama_anggota, a.no_anggota,
-						DATEDIFF(p.tgl_kembali, CURDATE()) as sisa_hari,
+						DATEDIFF(CURDATE(), p.tgl_kembali) as hari_terlambat,
 						s.nama as nama_staff
 						FROM t_peminjaman p
 						JOIN t_anggota a ON p.id_t_anggota = a.id_t_anggota 
@@ -148,7 +156,7 @@ function hitungDenda($db, $tgl_kembali, $status, $harga_buku) {
 				if($jum_data > 0) {
 					$no = $from + 1;
 					while($row = mysqli_fetch_assoc($result)) {
-						$total_denda = hitungDenda($db, $row['tgl_kembali'], $row['status'], $row['harga']);
+						$total_denda = hitungDenda($row, $pengaturan_denda);
 						
 						?>
 						<tr>
@@ -166,16 +174,24 @@ function hitungDenda($db, $tgl_kembali, $status, $harga_buku) {
 							<td><?php echo $row['tgl_kembali'] ? date('d/m/Y', strtotime($row['tgl_kembali'])) : '-'; ?></td>
 							<td><?php echo $row['qty']; ?></td>
 							<td><?php 
-								$status_class = '';
-								$sisa_hari = $row['sisa_hari'];
+								$status = $row['status'];
+								$icon = '';
+								$text_color = '';
 								
-								if($row['status'] == 'Belum Kembali') {
-									$status_class = 'text-danger';
-								} else if($sisa_hari <= 2 && $row['status'] == 'Dipinjam') {
-									$status_class = 'text-warning';
+								if($status == 'Belum Kembali') {
+									$text_color = 'danger';
+									$icon = '<i class="fa fa-exclamation-circle"></i> ';
+									echo '<span style="color: red;">' . $icon . 'Belum Kembali</span>';
+								} 
+								else if($status == 'Dipinjam') {
+									$text_color = 'warning';
+									echo '<span style="color: #ffc107;">' . $icon . 'Dipinjam (' . $row['hari_terlambat'] . ' hari)</span>';
 								}
-								
-								echo "<span class='" . $status_class . "'>" . $row['status'] . "</span>";
+								else if($status == 'Sudah Kembali') {
+									$text_color = 'success';
+									$icon = '<i class="fa fa-check-circle"></i> ';
+									echo '<span style="color: green;">' . $icon . 'Sudah Kembali</span>';
+								}
 							?></td>
 							<td><?php 
 								if($row['status'] == 'Sudah Kembali') {
@@ -184,7 +200,25 @@ function hitungDenda($db, $tgl_kembali, $status, $harga_buku) {
 									echo '-';
 								}
 							?></td>
-							<td>Rp <?php echo number_format($total_denda, 0, ',', '.'); ?></td>
+							<td>
+                                <?php 
+                                $total_denda = 0;
+                                $denda_terlambat = isset($pengaturan_denda['terlambat']) ? $pengaturan_denda['terlambat'] : 5000;
+                                
+                                // Hitung denda keterlambatan
+                                if ($row['hari_terlambat'] > 0) {
+                                    $total_denda += ($row['hari_terlambat'] * $denda_terlambat);
+                                }
+                                
+                                // Tambahkan denda kondisi jika ada
+                                if ($row['status'] == 'Sudah Kembali' && isset($row['denda'])) {
+                                    $total_denda += $row['denda'];
+                                }
+                                
+                                // Tampilkan total denda
+                                echo "Rp " . number_format($total_denda, 0, ',', '.');
+                                ?>
+                            </td>
 							<td>
 								<a href="edit_detil_pinjam.php?id=<?php echo $row['id_t_peminjaman']; ?>" 
 								   class="btn btn-info action-btn" 

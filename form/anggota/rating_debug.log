@@ -256,3 +256,32 @@
 
 [2025-03-11 05:03:39] Mencoba menyimpan rating
 [2025-03-11 05:03:39] Rating berhasil disimpan
+[2025-05-13 17:18:39] Memulai proses rating
+[2025-05-13 17:18:39] POST data: Array
+(
+    [id_buku] => 13
+    [rating] => 5
+    [ulasan] => bagus
+
+)
+
+[2025-05-13 17:18:39] SESSION data: Array
+(
+    [captcha_text] => 3340
+    [login_user] => shay
+    [role] => 3
+    [id_t_account] => 38
+    [id_t_anggota] => 29
+)
+
+[2025-05-13 17:18:39] Query anggota: SELECT id_t_anggota 
+                    FROM t_account 
+                    WHERE username = ? 
+                    AND id_t_anggota IS NOT NULL
+[2025-05-13 17:18:39] Data anggota ditemukan: Array
+(
+    [id_t_anggota] => 29
+)
+
+[2025-05-13 17:18:39] Mencoba menyimpan rating
+[2025-05-13 17:18:39] Rating berhasil disimpan
