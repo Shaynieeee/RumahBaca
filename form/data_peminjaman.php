@@ -7,17 +7,17 @@ $txtNo = "";
 $txtTgl = "";
 $txtStatus = "";
 
-if(isset($_GET['txtNo']) && $_GET['txtNo'] != "") {
+if (isset($_GET['txtNo']) && $_GET['txtNo'] != "") {
 	$txtNo = mysqli_real_escape_string($db, $_GET['txtNo']);
 	$where .= " AND p.no_peminjaman LIKE '%$txtNo%'";
 }
 
-if(isset($_GET['txtTgl']) && $_GET['txtTgl'] != "") {
+if (isset($_GET['txtTgl']) && $_GET['txtTgl'] != "") {
 	$txtTgl = mysqli_real_escape_string($db, $_GET['txtTgl']);
 	$where .= " AND p.tgl_pinjam = '$txtTgl'";
 }
 
-if(isset($_GET['txtStatus']) && $_GET['txtStatus'] != "Semua") {
+if (isset($_GET['txtStatus']) && $_GET['txtStatus'] != "Semua") {
 	$txtStatus = mysqli_real_escape_string($db, $_GET['txtStatus']);
 	$where .= " AND p.status = '$txtStatus'";
 }
@@ -33,81 +33,88 @@ mysqli_query($db, $update_status);
 $pengaturan_denda = [];
 $sql_denda = "SELECT * FROM t_pengaturan_denda";
 $result_denda = mysqli_query($db, $sql_denda);
-while($row = mysqli_fetch_assoc($result_denda)) {
-    $pengaturan_denda[$row['jenis_denda']] = $row['nilai_denda'];
+while ($row = mysqli_fetch_assoc($result_denda)) {
+	$pengaturan_denda[$row['jenis_denda']] = $row['nilai_denda'];
 }
 
 // Fungsi untuk menghitung denda
-function hitungDenda($row, $pengaturan_denda) {
-    $total_denda = 0;
-    $status = $row['status'];
-    $denda_terlambat = isset($pengaturan_denda['terlambat']) ? $pengaturan_denda['terlambat'] : 5000;
-    $kondisi = $row['kondisi'];
-    $harga_buku = $row['harga'];
-    $denda_kondisi = isset($row['denda']) ? $row['denda'] : 0;
-    
-    // Hitung denda keterlambatan untuk semua status
-    if ($row['hari_terlambat'] > 0) {
-        $denda_keterlambatan = $row['hari_terlambat'] * $denda_terlambat;
-        $total_denda += $denda_keterlambatan;
-    }
+function hitungDenda($row, $pengaturan_denda)
+{
+	$total_denda = 0;
+	$status = $row['status'];
+	$denda_terlambat = isset($pengaturan_denda['terlambat']) ? $pengaturan_denda['terlambat'] : 5000;
+	$nilai_denda_rusak = isset($pengaturan_denda['rusak']) ? $pengaturan_denda['rusak'] : 30;
+	$nilai_denda_hilang = isset($pengaturan_denda['hilang']) ? $pengaturan_denda['hilang'] : 100;
+	$kondisi = $row['kondisi'];
+	$harga_buku = $row['harga'];
 
-    // Tambahkan denda kondisi jika status Sudah Kembali
-    if ($status == 'Sudah Kembali' && $kondisi != 'Baik') {
-        $total_denda += $denda_kondisi;
-    }
+	// Hitung denda keterlambatan untuk semua status
+	if ($row['hari_terlambat'] > 0) {
+		$denda_keterlambatan = $row['hari_terlambat'] * $denda_terlambat;
+		$total_denda += $denda_keterlambatan;
+	}
 
-    return $total_denda;
+	// Hitung denda kondisi berdasarkan persentase dari harga buku
+	if ($status == 'Sudah Kembali') {
+		if ($kondisi == 'Rusak') {
+			$denda_kondisi = round($harga_buku * ($nilai_denda_rusak / 100));
+			$total_denda += $denda_kondisi;
+		} elseif ($kondisi == 'Hilang') {
+			$denda_kondisi = round($harga_buku * ($nilai_denda_hilang / 100));
+			$total_denda += $denda_kondisi;
+		}
+	}
+
+	return $total_denda;
 }
 ?>
 
 <div id="page-wrapper">
-    <div class="row">
-        <div class="col-lg-12">
-            <h1 class="page-header"></h1>
-        </div>
-    </div>
+	<div class="row">
+		<div class="col-lg-12">
+			<h1 class="page-header"></h1>
+		</div>
+	</div>
 
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <i class="fa fa-search"></i> Filter Pencarian
-                </div>
-                <div class="panel-body">
-                    <form method="GET">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>No Peminjaman</label>
-                                <input type="text" class="form-control" name="txtNo" 
-                                       value="<?php echo $txtNo; ?>" 
-                                       placeholder="Masukkan No Peminjaman">
-                            </div>
-                            <div class="form-group">
-                                <label>Tanggal Peminjaman</label>
-                                <input type="date" class="form-control" name="txtTgl" 
-                                       value="<?php echo $txtTgl; ?>">
-                            </div>
-                            <div class="form-group">
-                                <label>Status</label>
-                                <select name="txtStatus" class="form-control">
-                                    <option value="Semua">Semua Status</option>
-                                    <option value="Dipinjam" <?php echo ($txtStatus == 'Dipinjam') ? 'selected' : ''; ?>>Dipinjam</option>
-                                    <option value="Sudah Kembali" <?php echo ($txtStatus == 'Sudah Kembali') ? 'selected' : ''; ?>>Sudah Kembali</option>
-                                    <option value="Belum Kembali" <?php echo ($txtStatus == 'Belum Kembali') ? 'selected' : ''; ?>>Belum Kembali</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fa fa-search"></i> Cari
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<i class="fa fa-search"></i> Filter Pencarian
+				</div>
+				<div class="panel-body">
+					<form method="GET">
+						<div class="col-md-4">
+							<div class="form-group">
+								<label>No Peminjaman</label>
+								<input type="text" class="form-control" name="txtNo" value="<?php echo $txtNo; ?>"
+									placeholder="Masukkan No Peminjaman">
+							</div>
+							<div class="form-group">
+								<label>Tanggal Peminjaman</label>
+								<input type="date" class="form-control" name="txtTgl" value="<?php echo $txtTgl; ?>">
+							</div>
+							<div class="form-group">
+								<label>Status</label>
+								<select name="txtStatus" class="form-control">
+									<option value="Semua">Semua Status</option>
+									<option value="Dipinjam" <?php echo ($txtStatus == 'Dipinjam') ? 'selected' : ''; ?>>
+										Dipinjam</option>
+									<option value="Sudah Kembali" <?php echo ($txtStatus == 'Sudah Kembali') ? 'selected' : ''; ?>>Sudah Kembali</option>
+									<option value="Belum Kembali" <?php echo ($txtStatus == 'Belum Kembali') ? 'selected' : ''; ?>>Belum Kembali</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<button type="submit" class="btn btn-primary">
+									<i class="fa fa-search"></i> Cari
+								</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
 
 	<hr>
 
@@ -130,13 +137,13 @@ function hitungDenda($row, $pengaturan_denda) {
 					</tr>
 				</thead>
 				<tbody>
-				<?php
-				$page = isset($_GET['hal']) ? $_GET['hal'] : 1;
-				$max_results = 10;
-				$from = (($page * $max_results) - $max_results);
+					<?php
+					$page = isset($_GET['hal']) ? $_GET['hal'] : 1;
+					$max_results = 10;
+					$from = (($page * $max_results) - $max_results);
 
-				// Query untuk mengambil data peminjaman
-				$sql = "SELECT p.*, dp.id_t_buku, dp.qty, dp.denda, dp.kondisi,
+					// Query untuk mengambil data peminjaman
+					$sql = "SELECT p.*, dp.id_t_buku, dp.qty, dp.denda, dp.kondisi,
 						b.nama_buku, b.penulis, b.harga,
 						a.nama as nama_anggota, a.no_anggota,
 						DATEDIFF(CURDATE(), p.tgl_kembali) as hari_terlambat,
@@ -150,102 +157,105 @@ function hitungDenda($row, $pengaturan_denda) {
 						ORDER BY p.tgl_pinjam DESC, p.id_t_peminjaman DESC
 						LIMIT $from, $max_results";
 
-				$result = mysqli_query($db, $sql);
-				$jum_data = mysqli_num_rows($result);
+					$result = mysqli_query($db, $sql);
+					$jum_data = mysqli_num_rows($result);
 
-				if($jum_data > 0) {
-					$no = $from + 1;
-					while($row = mysqli_fetch_assoc($result)) {
-						$total_denda = hitungDenda($row, $pengaturan_denda);
-						
-						?>
-						<tr>
-							<td><?php echo $no++; ?></td>
-							<td><?php echo $row['no_peminjaman']; ?></td>
-							<td><?php echo htmlspecialchars($row['nama_anggota']); ?></td>
-							<td><?php 
+					if ($jum_data > 0) {
+						$no = $from + 1;
+						while ($row = mysqli_fetch_assoc($result)) {
+							$total_denda = hitungDenda($row, $pengaturan_denda);
+
+							?>
+							<tr>
+								<td><?php echo $no++; ?></td>
+								<td><?php echo $row['no_peminjaman']; ?></td>
+								<td><?php echo htmlspecialchars($row['nama_anggota']); ?></td>
+								<td><?php
 								if (!empty($row['nama_staff'])) {
 									echo "Staff-" . htmlspecialchars($row['nama_staff']);
 								} else {
 									echo "Admin-" . htmlspecialchars($_SESSION['login_user']);
 								}
-							?></td>
-							<td><?php echo date('d/m/Y', strtotime($row['tgl_pinjam'])); ?></td>
-							<td><?php echo $row['tgl_kembali'] ? date('d/m/Y', strtotime($row['tgl_kembali'])) : '-'; ?></td>
-							<td><?php echo $row['qty']; ?></td>
-							<td><?php 
+								?></td>
+								<td><?php echo date('d/m/Y', strtotime($row['tgl_pinjam'])); ?></td>
+								<td><?php echo $row['tgl_kembali'] ? date('d/m/Y', strtotime($row['tgl_kembali'])) : '-'; ?>
+								</td>
+								<td><?php echo $row['qty']; ?></td>
+								<td><?php
 								$status = $row['status'];
 								$icon = '';
 								$text_color = '';
-								
-								if($status == 'Belum Kembali') {
+
+								if ($status == 'Belum Kembali') {
 									$text_color = 'danger';
 									$icon = '<i class="fa fa-exclamation-circle"></i> ';
 									echo '<span style="color: red;">' . $icon . 'Belum Kembali</span>';
-								} 
-								else if($status == 'Dipinjam') {
+								} else if ($status == 'Dipinjam') {
 									$text_color = 'warning';
 									echo '<span style="color: #ffc107;">' . $icon . 'Dipinjam (' . $row['hari_terlambat'] . ' hari)</span>';
-								}
-								else if($status == 'Sudah Kembali') {
+								} else if ($status == 'Sudah Kembali') {
 									$text_color = 'success';
 									$icon = '<i class="fa fa-check-circle"></i> ';
 									echo '<span style="color: green;">' . $icon . 'Sudah Kembali</span>';
 								}
-							?></td>
-							<td><?php 
-								if($row['status'] == 'Sudah Kembali') {
+								?></td>
+								<td><?php
+								if ($row['status'] == 'Sudah Kembali') {
 									echo isset($row['kondisi']) ? $row['kondisi'] : "Baik";
 								} else {
 									echo '-';
 								}
-							?></td>
-							<td>
-                                <?php 
-                                $total_denda = 0;
-                                $denda_terlambat = isset($pengaturan_denda['terlambat']) ? $pengaturan_denda['terlambat'] : 5000;
-                                
-                                // Hitung denda keterlambatan
-                                if ($row['hari_terlambat'] > 0) {
-                                    $total_denda += ($row['hari_terlambat'] * $denda_terlambat);
-                                }
-                                
-                                // Tambahkan denda kondisi jika ada
-                                if ($row['status'] == 'Sudah Kembali' && isset($row['denda'])) {
-                                    $total_denda += $row['denda'];
-                                }
-                                
-                                // Tampilkan total denda
-                                echo "Rp " . number_format($total_denda, 0, ',', '.');
-                                ?>
-                            </td>
-							<td>
-								<a href="edit_detil_pinjam.php?id=<?php echo $row['id_t_peminjaman']; ?>" 
-								   class="btn btn-info action-btn" 
-								   data-toggle="tooltip" 
-								   title="Edit Peminjaman">
-									<i class="fa fa-edit fa-lg"></i>
-								</a>
-							</td>
-							<td>
-								<a href="detil_peminjaman.php?id=<?php echo $row['id_t_peminjaman']; ?>" 
-								   class="btn btn-warning" 
-								   data-toggle="tooltip" 
-								   title="Lihat Detail">
-									<i class="fa fa-eye fa-lg"></i>
-								</a>
-							</td>
-						</tr>
-						<?php
+								?></td>
+								<td>
+									<?php
+									// Hitung total denda menggunakan fungsi yang sudah dibuat
+									$total_denda = hitungDenda($row, $pengaturan_denda);
+									try {
+										mysqli_begin_transaction($db);
+
+										// Update total denda ke database dengan prepared statement
+										$update_denda = "UPDATE t_peminjaman SET total_denda = ? 
+                                                   WHERE id_t_peminjaman = ?";
+										$stmt = mysqli_prepare($db, $update_denda);
+										mysqli_stmt_bind_param($stmt, "di", $total_denda, $row['id_t_peminjaman']);
+
+										if (!mysqli_stmt_execute($stmt)) {
+											throw new Exception("Error updating total denda: " . mysqli_error($db));
+										}
+
+										mysqli_commit($db);
+									} catch (Exception $e) {
+										mysqli_rollback($db);
+										error_log($e->getMessage());
+									}
+
+									// Tampilkan total denda
+									echo "Rp " . number_format($total_denda, 0, ',', '.');
+									?>
+								</td>
+								<td>
+									<a href="edit_detil_pinjam.php?id=<?php echo $row['id_t_peminjaman']; ?>"
+										class="btn btn-info action-btn" data-toggle="tooltip" title="Edit Peminjaman">
+										<i class="fa fa-edit fa-lg"></i>
+									</a>
+								</td>
+								<td>
+									<a href="detil_peminjaman.php?id=<?php echo $row['id_t_peminjaman']; ?>"
+										class="btn btn-warning" data-toggle="tooltip" title="Lihat Detail">
+										<i class="fa fa-eye fa-lg"></i>
+									</a>
+								</td>
+							</tr>
+							<?php
+						}
+					} else {
+						echo "<tr><td colspan='11' class='text-center'>Data tidak ditemukan</td></tr>";
 					}
-				} else {
-					echo "<tr><td colspan='11' class='text-center'>Data tidak ditemukan</td></tr>";
-				}
-				?>
+					?>
 				</tbody>
 			</table>
 
-			<?php if($jum_data > 0): ?>
+			<?php if ($jum_data > 0): ?>
 				<div class="text-center">
 					<?php
 					$total_sql = "SELECT COUNT(DISTINCT p.id_t_peminjaman) as total 
@@ -258,14 +268,17 @@ function hitungDenda($row, $pengaturan_denda) {
 					$total_pages = ceil($row['total'] / $max_results);
 
 					echo "<ul class='pagination'>";
-					for($i = 1; $i <= $total_pages; $i++) {
+					for ($i = 1; $i <= $total_pages; $i++) {
 						$active = ($page == $i) ? 'active' : '';
 						// Tambahkan parameter filter ke URL pagination
 						$url = "?hal=$i";
-						if($txtNo != "") $url .= "&txtNo=$txtNo";
-						if($txtTgl != "") $url .= "&txtTgl=$txtTgl";
-						if($txtStatus != "") $url .= "&txtStatus=$txtStatus";
-						
+						if ($txtNo != "")
+							$url .= "&txtNo=$txtNo";
+						if ($txtTgl != "")
+							$url .= "&txtTgl=$txtTgl";
+						if ($txtStatus != "")
+							$url .= "&txtStatus=$txtStatus";
+
 						echo "<li class='$active'><a href='$url'>$i</a></li>";
 					}
 					echo "</ul>";
@@ -277,51 +290,56 @@ function hitungDenda($row, $pengaturan_denda) {
 </div>
 
 <style>
-    /* Style untuk tombol aksi */
-    .btn-info, .btn-warning {
-        padding: 6px 12px;
-        margin: 2px;
-        font-size: 14px;
-    }
+	/* Style untuk tombol aksi */
+	.btn-info,
+	.btn-warning {
+		padding: 6px 12px;
+		margin: 2px;
+		font-size: 14px;
+	}
 
-    /* Style untuk icon */
-    .fa-lg {
-        font-size: 18px;
-    }
+	/* Style untuk icon */
+	.fa-lg {
+		font-size: 18px;
+	}
 
-    /* Hover effect */
-    .btn-info:hover, .btn-warning:hover {
-        opacity: 0.9;
-        transform: scale(1.05);
-    }
+	/* Hover effect */
+	.btn-info:hover,
+	.btn-warning:hover {
+		opacity: 0.9;
+		transform: scale(1.05);
+	}
 
-    /* Tooltip style */
-    .tooltip-inner {
-        font-size: 12px;
-        padding: 5px 10px;
-    }
+	/* Tooltip style */
+	.tooltip-inner {
+		font-size: 12px;
+		padding: 5px 10px;
+	}
 
-    .panel-body {
-        padding: 25px;
-    }
-    .form-group label {
-        font-weight: 600;
-        color: #333;
-    }
-    .form-control {
-        height: 38px;
-    }
-    .btn-primary {
-        margin-right: 15px;
-    }
+	.panel-body {
+		padding: 25px;
+	}
+
+	.form-group label {
+		font-weight: 600;
+		color: #333;
+	}
+
+	.form-control {
+		height: 38px;
+	}
+
+	.btn-primary {
+		margin-right: 15px;
+	}
 </style>
 
 <script>
-$(document).ready(function(){
-    $('[data-toggle="tooltip"]').tooltip();
-});
+	$(document).ready(function () {
+		$('[data-toggle="tooltip"]').tooltip();
+	});
 </script>
 
-<?php 
+<?php
 // include "../template/footer.php"
 ; ?>
