@@ -29,44 +29,7 @@ $update_status = "UPDATE t_peminjaman
 				  AND status = 'Dipinjam'";
 mysqli_query($db, $update_status);
 
-// Ambil pengaturan denda dari database
-$pengaturan_denda = [];
-$sql_denda = "SELECT * FROM t_pengaturan_denda";
-$result_denda = mysqli_query($db, $sql_denda);
-while ($row = mysqli_fetch_assoc($result_denda)) {
-	$pengaturan_denda[$row['jenis_denda']] = $row['nilai_denda'];
-}
-
-// Fungsi untuk menghitung denda
-function hitungDenda($row, $pengaturan_denda)
-{
-	$total_denda = 0;
-	$status = $row['status'];
-	$denda_terlambat = isset($pengaturan_denda['terlambat']) ? $pengaturan_denda['terlambat'] : 5000;
-	$nilai_denda_rusak = isset($pengaturan_denda['rusak']) ? $pengaturan_denda['rusak'] : 30;
-	$nilai_denda_hilang = isset($pengaturan_denda['hilang']) ? $pengaturan_denda['hilang'] : 100;
-	$kondisi = $row['kondisi'];
-	$harga_buku = $row['harga'];
-
-	// Hitung denda keterlambatan untuk semua status
-	if ($row['hari_terlambat'] > 0) {
-		$denda_keterlambatan = $row['hari_terlambat'] * $denda_terlambat;
-		$total_denda += $denda_keterlambatan;
-	}
-
-	// Hitung denda kondisi berdasarkan persentase dari harga buku
-	if ($status == 'Sudah Kembali') {
-		if ($kondisi == 'Rusak') {
-			$denda_kondisi = round($harga_buku * ($nilai_denda_rusak / 100));
-			$total_denda += $denda_kondisi;
-		} elseif ($kondisi == 'Hilang') {
-			$denda_kondisi = round($harga_buku * ($nilai_denda_hilang / 100));
-			$total_denda += $denda_kondisi;
-		}
-	}
-
-	return $total_denda;
-}
+// Fungsi denda telah dihapus
 ?>
 
 <div id="page-wrapper">
@@ -131,7 +94,6 @@ function hitungDenda($row, $pengaturan_denda)
 						<th>Tanggal Kembali</th>
 						<th>Jumlah Buku</th>
 						<th>Status</th>
-						<th>Kondisi</th>
 						<th>Total Denda</th>
 						<th colspan="2">Action</th>
 					</tr>
@@ -143,17 +105,18 @@ function hitungDenda($row, $pengaturan_denda)
 					$from = (($page * $max_results) - $max_results);
 
 					// Query untuk mengambil data peminjaman
-					$sql = "SELECT p.*, dp.id_t_buku, dp.qty, dp.denda, dp.kondisi,
-						b.nama_buku, b.penulis, b.harga,
+					$sql = "SELECT p.*, 
 						a.nama as nama_anggota, a.no_anggota,
 						DATEDIFF(CURDATE(), p.tgl_kembali) as hari_terlambat,
-						s.nama as nama_staff
+						s.nama as nama_staff,
+						SUM(dp.qty) as total_qty,
+						SUM(dp.denda) as total_denda_buku
 						FROM t_peminjaman p
 						JOIN t_anggota a ON p.id_t_anggota = a.id_t_anggota 
 						JOIN t_detil_pinjam dp ON p.id_t_peminjaman = dp.id_t_peminjaman
-						JOIN t_buku b ON dp.id_t_buku = b.id_t_buku
 						LEFT JOIN t_staff s ON p.id_t_staff = s.id_t_staff
 						$where
+						GROUP BY p.id_t_peminjaman
 						ORDER BY p.tgl_pinjam DESC, p.id_t_peminjaman DESC
 						LIMIT $from, $max_results";
 
@@ -163,8 +126,6 @@ function hitungDenda($row, $pengaturan_denda)
 					if ($jum_data > 0) {
 						$no = $from + 1;
 						while ($row = mysqli_fetch_assoc($result)) {
-							$total_denda = hitungDenda($row, $pengaturan_denda);
-
 							?>
 							<tr>
 								<td><?php echo $no++; ?></td>
@@ -180,7 +141,7 @@ function hitungDenda($row, $pengaturan_denda)
 								<td><?php echo date('d/m/Y', strtotime($row['tgl_pinjam'])); ?></td>
 								<td><?php echo $row['tgl_kembali'] ? date('d/m/Y', strtotime($row['tgl_kembali'])) : '-'; ?>
 								</td>
-								<td><?php echo $row['qty']; ?></td>
+								<td><?php echo $row['total_qty']; ?></td>
 								<td><?php
 								$status = $row['status'];
 								$icon = '';
@@ -199,37 +160,9 @@ function hitungDenda($row, $pengaturan_denda)
 									echo '<span style="color: green;">' . $icon . 'Sudah Kembali</span>';
 								}
 								?></td>
-								<td><?php
-								if ($row['status'] == 'Sudah Kembali') {
-									echo isset($row['kondisi']) ? $row['kondisi'] : "Baik";
-								} else {
-									echo '-';
-								}
-								?></td>
 								<td>
 									<?php
-									// Hitung total denda menggunakan fungsi yang sudah dibuat
-									$total_denda = hitungDenda($row, $pengaturan_denda);
-									try {
-										mysqli_begin_transaction($db);
-
-										// Update total denda ke database dengan prepared statement
-										$update_denda = "UPDATE t_peminjaman SET total_denda = ? 
-                                                   WHERE id_t_peminjaman = ?";
-										$stmt = mysqli_prepare($db, $update_denda);
-										mysqli_stmt_bind_param($stmt, "di", $total_denda, $row['id_t_peminjaman']);
-
-										if (!mysqli_stmt_execute($stmt)) {
-											throw new Exception("Error updating total denda: " . mysqli_error($db));
-										}
-
-										mysqli_commit($db);
-									} catch (Exception $e) {
-										mysqli_rollback($db);
-										error_log($e->getMessage());
-									}
-
-									// Tampilkan total denda
+									$total_denda = $row['total_denda_buku'] ?? 0;
 									echo "Rp " . number_format($total_denda, 0, ',', '.');
 									?>
 								</td>
