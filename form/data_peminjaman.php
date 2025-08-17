@@ -94,7 +94,6 @@ mysqli_query($db, $update_status);
 						<th>Tanggal Kembali</th>
 						<th>Jumlah Buku</th>
 						<th>Status</th>
-						<th>Kondisi</th>
 						<th>Total Denda</th>
 						<th colspan="2">Action</th>
 					</tr>
@@ -106,17 +105,18 @@ mysqli_query($db, $update_status);
 					$from = (($page * $max_results) - $max_results);
 
 					// Query untuk mengambil data peminjaman
-					$sql = "SELECT p.*, dp.id_t_buku, dp.qty, dp.denda, dp.kondisi,
-						b.nama_buku, b.penulis, b.harga,
+					$sql = "SELECT p.*, 
 						a.nama as nama_anggota, a.no_anggota,
 						DATEDIFF(CURDATE(), p.tgl_kembali) as hari_terlambat,
-						s.nama as nama_staff
+						s.nama as nama_staff,
+						SUM(dp.qty) as total_qty,
+						SUM(dp.denda) as total_denda_buku
 						FROM t_peminjaman p
 						JOIN t_anggota a ON p.id_t_anggota = a.id_t_anggota 
 						JOIN t_detil_pinjam dp ON p.id_t_peminjaman = dp.id_t_peminjaman
-						JOIN t_buku b ON dp.id_t_buku = b.id_t_buku
 						LEFT JOIN t_staff s ON p.id_t_staff = s.id_t_staff
 						$where
+						GROUP BY p.id_t_peminjaman
 						ORDER BY p.tgl_pinjam DESC, p.id_t_peminjaman DESC
 						LIMIT $from, $max_results";
 
@@ -141,7 +141,7 @@ mysqli_query($db, $update_status);
 								<td><?php echo date('d/m/Y', strtotime($row['tgl_pinjam'])); ?></td>
 								<td><?php echo $row['tgl_kembali'] ? date('d/m/Y', strtotime($row['tgl_kembali'])) : '-'; ?>
 								</td>
-								<td><?php echo $row['qty']; ?></td>
+								<td><?php echo $row['total_qty']; ?></td>
 								<td><?php
 								$status = $row['status'];
 								$icon = '';
@@ -160,16 +160,10 @@ mysqli_query($db, $update_status);
 									echo '<span style="color: green;">' . $icon . 'Sudah Kembali</span>';
 								}
 								?></td>
-								<td><?php
-								if ($row['status'] == 'Sudah Kembali') {
-									echo isset($row['kondisi']) ? $row['kondisi'] : "Baik";
-								} else {
-									echo '-';
-								}
-								?></td>
 								<td>
 									<?php
-									echo "Rp " . number_format($row['total_denda'], 0, ',', '.');
+									$total_denda = $row['total_denda_buku'] ?? 0;
+									echo "Rp " . number_format($total_denda, 0, ',', '.');
 									?>
 								</td>
 								<td>
