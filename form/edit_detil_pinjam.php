@@ -47,6 +47,16 @@ if (isset($_POST['submit'])) {
     $kondisi = $_POST['kondisi'];
     $keterangan = $_POST['keterangan'];
     $denda = $_POST['denda']; // Denda dari kondisi buku
+    
+    // Hitung total denda untuk setiap buku (mengambil nilai maksimum dari kondisi-kondisi bukunya)
+    $total_denda_per_buku = array();
+    foreach($id_detil as $idx => $id) {
+        $max_denda = 0;
+        if(isset($denda[$id]) && is_array($denda[$id])) {
+            $max_denda = max($denda[$id]);
+        }
+        $total_denda_per_buku[$id] = $max_denda;
+    }
     $tgl_kembali = $_POST['tgl_kembali'];
     $status = $_POST['status'];
 
@@ -234,31 +244,40 @@ if (isset($_POST['submit'])) {
                                         <input type="text" class="form-control" value="<?php echo $row['penulis']; ?>"
                                             readonly>
                                     </div>
+                                    <div class="form-group">
+                                        <label>Jumlah Dipinjam</label>
+                                        <input type="number" class="form-control" value="<?php echo $row['qty']; ?>"
+                                            readonly>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Kondisi Saat Kembali</label>
-                                        <select name="kondisi[]" class="form-control kondisi-select" required
-                                            data-harga="<?php echo $row['harga']; ?>"
-                                            data-denda-input="#denda_<?php echo $row['id_t_detil_pinjam']; ?>">
-                                            <option value="">Pilih Kondisi</option>
-                                            <option value="Baik" <?php echo ($row['kondisi'] == 'Baik') ? 'selected' : ''; ?>>
-                                                Baik</option>
-                                            <option value="Rusak" <?php echo ($row['kondisi'] == 'Rusak') ? 'selected' : ''; ?>>Rusak</option>
-                                            <option value="Hilang" <?php echo ($row['kondisi'] == 'Hilang') ? 'selected' : ''; ?>>Hilang</option>
-                                        </select>
+                                    <?php for($i = 0; $i < $row['qty']; $i++): ?>
+                                    <div class="copy-item mb-4">
+                                        <h5>Buku <?php echo $i + 1; ?></h5>
+                                        <div class="form-group">
+                                            <label>Kondisi Saat Kembali</label>
+                                            <select name="kondisi[<?php echo $row['id_t_detil_pinjam']; ?>][]" class="form-control kondisi-select" required
+                                                data-harga="<?php echo $row['harga']; ?>"
+                                                data-denda-input="#denda_<?php echo $row['id_t_detil_pinjam']; ?>_<?php echo $i; ?>">
+                                                <option value="">Pilih Kondisi</option>
+                                                <option value="Baik">Baik</option>
+                                                <option value="Rusak">Rusak</option>
+                                                <option value="Hilang">Hilang</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Denda</label>
+                                            <input type="number" name="denda[<?php echo $row['id_t_detil_pinjam']; ?>][]"
+                                                id="denda_<?php echo $row['id_t_detil_pinjam']; ?>_<?php echo $i; ?>" class="form-control"
+                                                value="0" readonly>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Keterangan</label>
+                                            <textarea name="keterangan[<?php echo $row['id_t_detil_pinjam']; ?>][]" class="form-control"
+                                                rows="2"></textarea>
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Denda</label>
-                                        <input type="number" name="denda[]"
-                                            id="denda_<?php echo $row['id_t_detil_pinjam']; ?>" class="form-control"
-                                            value="<?php echo $row['denda']; ?>" readonly>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Keterangan</label>
-                                        <textarea name="keterangan[]" class="form-control"
-                                            rows="2"><?php echo $row['keterangan']; ?></textarea>
-                                    </div>
+                                    <?php endfor; ?>
                                 </div>
                             </div>
                         </div>
