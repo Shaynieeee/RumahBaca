@@ -92,7 +92,6 @@ if(!$peminjaman) {
                                                 <th width="5%">No</th>
                                                 <th width="30%">Nama Buku</th>
                                                 <th width="20%">Penulis</th>
-                                                <th width="10%">Qty</th>
                                                 <th width="15%">Kondisi</th>
                                                 <th width="20%">Denda</th>
                                             </tr>
@@ -114,7 +113,6 @@ if(!$peminjaman) {
                                                     <td class="text-center"><?php echo $no++; ?></td>
                                                     <td><?php echo $detail['nama_buku']; ?></td>
                                                     <td><?php echo $detail['penulis']; ?></td>
-                                                    <td class="text-center"><?php echo $detail['qty']; ?></td>
                                                     <td class="text-center">
                                                         <?php 
                                                         if($peminjaman['status'] == 'Dipinjam' || $peminjaman['status'] == 'Belum Kembali') {
@@ -144,7 +142,7 @@ if(!$peminjaman) {
                                             }
                                             ?>
                                             <tr class="info">
-                                                <td colspan="5" class="text-right"><strong>Total Denda</strong></td>
+                                                <td colspan="4" class="text-right"><strong>Total Denda</strong></td>
                                                 <td class="text-right"><strong>Rp <?php echo number_format($total_denda,0,',','.'); ?></strong></td>
                                             </tr>
                                         </tbody>
