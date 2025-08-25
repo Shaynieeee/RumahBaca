@@ -61,3 +61,169 @@ Stack trace:
 #0 C:\xampp\htdocs\Perpustakaan\form\input_buku.php(124): mysqli_stmt_bind_param(Object(mysqli_stmt), 'sssssssisisiiis...', 'Smart Strategie...', '02839101837', 'Pengembangan Di...', 'Tadeusz Murawsk...', 'Artificial Inte...', 'Inggris', '2019', 25000, '2', 25, 'Unlock the powe...', 47, 10, '1741315488_Scre...', '1741314249_Smar...', 'min', 11)
 #1 {main}
   thrown in C:\xampp\htdocs\Perpustakaan\form\input_buku.php on line 124
+Pesan error atau debugPesan error atau debugPesan error atau debugPesan error atau debugPesan error atau debugPesan error atau debugPesan error atau debugPesan error atau debugPesan error atau debugPOST data: Array
+(
+    [id_peminjaman] => 137
+    [tgl_kembali] => 2025-08-21
+    [id_detil] => Array
+        (
+            [0] => 156
+        )
+
+    [kondisi] => Array
+        (
+            [156] => Array
+                (
+                    [0] => Hilang
+                )
+
+        )
+
+    [denda] => Array
+        (
+            [156] => Array
+                (
+                    [0] => 75000
+                )
+
+        )
+
+    [keterangan] => Array
+        (
+            [156] => Array
+                (
+                    [0] => 
+                )
+
+        )
+
+    [status] => Sudah Kembali
+    [submit] => 
+)
+Processing peminjaman ID: 137Pesan error atau debugPesan error atau debugPOST data: Array
+(
+    [id_peminjaman] => 136
+    [tgl_kembali] => 2025-08-21
+    [id_detil] => Array
+        (
+            [0] => 154
+            [1] => 155
+        )
+
+    [kondisi] => Array
+        (
+            [154] => Array
+                (
+                    [0] => Rusak
+                )
+
+            [155] => Array
+                (
+                    [0] => Hilang
+                )
+
+        )
+
+    [denda] => Array
+        (
+            [154] => Array
+                (
+                    [0] => 15000
+                )
+
+            [155] => Array
+                (
+                    [0] => 50000
+                )
+
+        )
+
+    [keterangan] => Array
+        (
+            [154] => Array
+                (
+                    [0] => 
+                )
+
+            [155] => Array
+                (
+                    [0] => 
+                )
+
+        )
+
+    [status] => Sudah Kembali
+    [submit] => 
+)
+Processing peminjaman ID: 136Pesan error atau debugPesan error atau debugPOST data: Array
+(
+    [id_peminjaman] => 133
+    [tgl_kembali] => 2025-08-21
+    [id_detil] => Array
+        (
+            [0] => 120
+            [1] => 121
+            [2] => 138
+        )
+
+    [kondisi] => Array
+        (
+            [120] => Array
+                (
+                    [0] => Baik
+                )
+
+            [121] => Array
+                (
+                    [0] => Hilang
+                )
+
+            [138] => Array
+                (
+                    [0] => Rusak
+                )
+
+        )
+
+    [denda] => Array
+        (
+            [120] => Array
+                (
+                    [0] => 0
+                )
+
+            [121] => Array
+                (
+                    [0] => 75000
+                )
+
+            [138] => Array
+                (
+                    [0] => 22500
+                )
+
+        )
+
+    [keterangan] => Array
+        (
+            [120] => Array
+                (
+                    [0] => 
+                )
+
+            [121] => Array
+                (
+                    [0] => 
+                )
+
+            [138] => Array
+                (
+                    [0] => 
+                )
+
+        )
+
+    [status] => Sudah Kembali
+    [submit] => 
+)
+Processing peminjaman ID: 133

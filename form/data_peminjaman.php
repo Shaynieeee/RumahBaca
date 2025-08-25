@@ -109,7 +109,7 @@ mysqli_query($db, $update_status);
 						a.nama as nama_anggota, a.no_anggota,
 						DATEDIFF(CURDATE(), p.tgl_kembali) as hari_terlambat,
 						s.nama as nama_staff,
-						SUM(dp.qty) as total_qty,
+						COUNT(dp.id_t_detil_pinjam) as total_qty,
 						SUM(dp.denda) as total_denda_buku
 						FROM t_peminjaman p
 						JOIN t_anggota a ON p.id_t_anggota = a.id_t_anggota 
