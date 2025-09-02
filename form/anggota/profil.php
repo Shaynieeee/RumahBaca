@@ -2,14 +2,31 @@
 session_start();
 require_once '../../setting/koneksi.php';
 
-// Cegah Session Fixation
-session_regenerate_id(true);
+// Ambil scopes user
+$scopes = [];
+if (isset($_SESSION['login_user'])) {
+    $u = mysqli_real_escape_string($db, $_SESSION['login_user']);
+    $sql_s = "SELECT s.name FROM t_account a
+              JOIN t_role_scope rs ON a.id_p_role = rs.role_id
+              JOIN t_scope s ON rs.scope_id = s.id
+              WHERE a.username = '$u'";
+    $rs = mysqli_query($db, $sql_s);
+    if ($rs) {
+        while ($r = mysqli_fetch_assoc($rs))
+            $scopes[] = strtolower(trim($r['name']));
+    }
+}
 
-// Cek login dan peran
-if (!isset($_SESSION['login_user']) || $_SESSION['role'] != 3) {
+// akses berdasarkan scope
+if (!isset($_SESSION['login_user']) || !in_array('profil-member', $scopes)) {
     header("location: ../../login.php");
     exit();
 }
+
+// Cegah Session Fixation
+session_regenerate_id(true);
+
+
 
 // Ambil data anggota dengan prepared statement
 $username = $_SESSION['login_user'];
@@ -69,11 +86,12 @@ include("header_anggota.php");
                             </tr>
                             <tr>
                                 <th>Tanggal Pendaftaran</th>
-                                <td><?php echo isset($anggota['tgl_daftar']) ? date('d F Y', strtotime($anggota['tgl_daftar'])) : 'Tidak tersedia'; ?></td>
+                                <td><?php echo isset($anggota['tgl_daftar']) ? date('d F Y', strtotime($anggota['tgl_daftar'])) : 'Tidak tersedia'; ?>
+                                </td>
                             </tr>
                             <tr>
                                 <th>Status</th>
-                                <?php 
+                                <?php
                                 $statusClass = ($anggota['status'] == 'Aktif') ? 'success' : 'danger';
                                 ?>
                                 <td>
@@ -83,13 +101,14 @@ include("header_anggota.php");
                                 </td>
                             </tr>
                         </table>
-                        
+
                         <!-- Tombol Edit Profil dan Cetak Kartu Anggota -->
                         <div class="d-flex justify-content-between mt-3">
                             <a href="edit_profil.php" class="btn btn-warning">
                                 <i class="fas fa-edit"></i> Edit Profil
                             </a>
-                            <a href="cetak_kartu.php?id=<?php echo urlencode($anggota['id_t_anggota']); ?>" target="_blank" class="btn btn-success">
+                            <a href="cetak_kartu.php?id=<?php echo urlencode($anggota['id_t_anggota']); ?>" target="_blank"
+                                class="btn btn-success">
                                 <i class="fas fa-id-card"></i> Cetak Kartu Anggota
                             </a>
                         </div>

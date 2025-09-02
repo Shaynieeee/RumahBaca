@@ -2,8 +2,23 @@
 session_start();
 require_once '../../setting/koneksi.php';
 
-// Cek apakah user sudah login
-if(!isset($_SESSION['login_user']) || $_SESSION['role'] != 3) {
+// Ambil scopes user
+$scopes = [];
+if (isset($_SESSION['login_user'])) {
+    $u = mysqli_real_escape_string($db, $_SESSION['login_user']);
+    $sql_s = "SELECT s.name FROM t_account a
+              JOIN t_role_scope rs ON a.id_p_role = rs.role_id
+              JOIN t_scope s ON rs.scope_id = s.id
+              WHERE a.username = '$u'";
+    $rs = mysqli_query($db, $sql_s);
+    if ($rs) {
+        while ($r = mysqli_fetch_assoc($rs))
+            $scopes[] = strtolower(trim($r['name']));
+    }
+}
+
+// akses berdasarkan scope
+if (!isset($_SESSION['login_user']) || !in_array('datapeminjaman-member', $scopes)) {
     header("location: ../../login.php");
     exit();
 }
@@ -26,7 +41,8 @@ $anggota = mysqli_fetch_assoc($result_anggota);
 $id_anggota = $anggota['id_t_anggota'];
 
 // Ambil data peminjaman aktif (belum dikembalikan)
-$sql = "SELECT p.*, b.nama_buku, b.penulis, dp.qty, dp.kondisi, dp.denda 
+$sql = "SELECT p.*, b.nama_buku, b.penulis, dp.*, -- ambil semua kolom detil pinjam
+        dp.kondisi, dp.denda
         FROM t_peminjaman p
         JOIN t_detil_pinjam dp ON p.id_t_peminjaman = dp.id_t_peminjaman
         JOIN t_buku b ON dp.id_t_buku = b.id_t_buku
@@ -60,7 +76,7 @@ $result_history = mysqli_stmt_get_result($stmt_history);
             <h1 class="page-header">Data Peminjaman</h1>
         </div>
     </div>
-    
+
     <!-- Peminjaman Aktif -->
     <div class="row">
         <div class="col-lg-12">
@@ -78,23 +94,22 @@ $result_history = mysqli_stmt_get_result($stmt_history);
                                 <th>Penulis</th>
                                 <th>Tanggal Pinjam</th>
                                 <th>Tanggal Kembali</th>
-                                <th>Qty</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
                             $no = 1;
-                            while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+                            while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+
                                 echo "<tr>";
-                                echo "<td>".$no."</td>";
-                                echo "<td>".$row['no_peminjaman']."</td>";
-                                echo "<td>".$row['nama_buku']."</td>";
-                                echo "<td>".$row['penulis']."</td>";
-                                echo "<td>".date('d-m-Y', strtotime($row['tgl_pinjam']))."</td>";
-                                echo "<td>".date('d-m-Y', strtotime($row['tgl_kembali']))."</td>";
-                                echo "<td>".$row['qty']."</td>";
-                                echo "<td><span class='label label-warning'>".$row['status']."</span></td>";
+                                echo "<td>" . $no . "</td>";
+                                echo "<td>" . $row['no_peminjaman'] . "</td>";
+                                echo "<td>" . $row['nama_buku'] . "</td>";
+                                echo "<td>" . $row['penulis'] . "</td>";
+                                echo "<td>" . date('d-m-Y', strtotime($row['tgl_pinjam'])) . "</td>";
+                                echo "<td>" . date('d-m-Y', strtotime($row['tgl_kembali'])) . "</td>";
+                                echo "<td><span class='label label-warning'>" . $row['status'] . "</span></td>";
                                 echo "</tr>";
                                 $no++;
                             }
@@ -122,7 +137,6 @@ $result_history = mysqli_stmt_get_result($stmt_history);
                                 <th>Judul Buku</th>
                                 <th>Tanggal Pinjam</th>
                                 <th>Tanggal Kembali</th>
-                                <th>Qty</th>
                                 <th>Kondisi</th>
                                 <th>Status</th>
                                 <th>Denda</th>
@@ -131,17 +145,16 @@ $result_history = mysqli_stmt_get_result($stmt_history);
                         <tbody>
                             <?php
                             $no = 1;
-                            while($row = mysqli_fetch_array($result_history, MYSQLI_ASSOC)) {
+                            while ($row = mysqli_fetch_array($result_history, MYSQLI_ASSOC)) {
                                 echo "<tr>";
-                                echo "<td>".$no."</td>";
-                                echo "<td>".$row['no_peminjaman']."</td>";
-                                echo "<td>".$row['nama_buku']."</td>";
-                                echo "<td>".date('d-m-Y', strtotime($row['tgl_pinjam']))."</td>";
-                                echo "<td>".date('d-m-Y', strtotime($row['tanggal_kembali']))."</td>";
-                                echo "<td>".$row['qty']."</td>";
-                                echo "<td>".$row['kondisi']."</td>";
-                                echo "<td><span class='label label-success'>".$row['status']."</span></td>";
-                                echo "<td>Rp. ".number_format($row['denda'],0,',','.')."</td>";
+                                echo "<td>" . $no . "</td>";
+                                echo "<td>" . $row['no_peminjaman'] . "</td>";
+                                echo "<td>" . $row['nama_buku'] . "</td>";
+                                echo "<td>" . date('d-m-Y', strtotime($row['tgl_pinjam'])) . "</td>";
+                                echo "<td>" . date('d-m-Y', strtotime($row['tanggal_kembali'])) . "</td>";
+                                echo "<td>" . $row['kondisi'] . "</td>";
+                                echo "<td><span class='label label-success'>" . $row['status'] . "</span></td>";
+                                echo "<td>Rp. " . number_format($row['denda'], 0, ',', '.') . "</td>";
                                 echo "</tr>";
                                 $no++;
                             }
@@ -154,4 +167,4 @@ $result_history = mysqli_stmt_get_result($stmt_history);
     </div>
 </div>
 
-<?php include "footer.php"; ?> 
+<?php include "footer.php"; ?>

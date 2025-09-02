@@ -285,3 +285,31 @@
 
 [2025-05-13 17:18:39] Mencoba menyimpan rating
 [2025-05-13 17:18:39] Rating berhasil disimpan
+[2025-09-01 15:03:47] Memulai proses rating
+[2025-09-01 15:03:47] POST data: Array
+(
+    [id_buku] => 14
+    [rating] => 5
+    [ulasan] => ok buku ini jelek
+)
+
+[2025-09-01 15:03:47] SESSION data: Array
+(
+    [captcha_text] => 3990
+    [login_user] => shay
+    [role] => 3
+    [id_t_account] => 38
+    [id_t_anggota] => 29
+)
+
+[2025-09-01 15:03:47] Query anggota: SELECT id_t_anggota 
+                    FROM t_account 
+                    WHERE username = ? 
+                    AND id_t_anggota IS NOT NULL
+[2025-09-01 15:03:47] Data anggota ditemukan: Array
+(
+    [id_t_anggota] => 29
+)
+
+[2025-09-01 15:03:47] Mencoba menyimpan rating
+[2025-09-01 15:03:47] Rating berhasil disimpan

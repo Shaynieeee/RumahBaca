@@ -2,14 +2,29 @@
 session_start();
 require_once '../../setting/koneksi.php';
 
-// Cegah Session Fixation
-session_regenerate_id(true);
+// Ambil scopes user
+$scopes = [];
+if (isset($_SESSION['login_user'])) {
+    $u = mysqli_real_escape_string($db, $_SESSION['login_user']);
+    $sql_s = "SELECT s.name FROM t_account a
+              JOIN t_role_scope rs ON a.id_p_role = rs.role_id
+              JOIN t_scope s ON rs.scope_id = s.id
+              WHERE a.username = '$u'";
+    $rs = mysqli_query($db, $sql_s);
+    if($rs){
+        while($r = mysqli_fetch_assoc($rs)) $scopes[] = strtolower(trim($r['name']));
+    }
+}
 
-// Cek login dan peran
-if (!isset($_SESSION['login_user']) || $_SESSION['role'] != 3) {
+// akses berdasarkan scope
+if (!isset($_SESSION['login_user']) || !in_array('profil-member', $scopes)) {
     header("location: ../../login.php");
     exit();
 }
+
+
+// Cegah Session Fixation
+session_regenerate_id(true);
 
 $error = "";
 $success = "";
