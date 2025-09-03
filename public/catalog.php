@@ -198,9 +198,12 @@ $total_pages = ceil($total_row['total'] / $limit);
     </div>
 
     <!-- Catalog Section -->
+
     <div class="container py-5">
         <div class="row">
             <?php
+            $catalog_mode = "Normal";
+            include $root . '/components/catalog/catalog.php';
             $query = "SELECT b.*, 
                   COALESCE(AVG(r.rating), 0) as avg_rating,
                   COUNT(r.id_rating) as total_rating
@@ -240,7 +243,8 @@ $total_pages = ceil($total_row['total'] / $limit);
                                 style="height: 250px; object-fit: cover;">
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title text-truncate">
-                                    <?php echo htmlspecialchars($row['nama_buku'] ?? 'Tidak ada judul'); ?></h5>
+                                    <?php echo htmlspecialchars($row['nama_buku'] ?? 'Tidak ada judul'); ?>
+                                </h5>
                                 <p class="card-text">
                                     <small class="text-muted">
                                         <i class="fa fa-user"></i>
