@@ -372,7 +372,8 @@ include $root . '/setting/koneksi.php';
                         <div class="row">
                             <div class="col-md-4 mb-3" style="width: 100%;">
                                 <input type="text" name="keyword" class="form-control form-control-lg" 
-                                       placeholder="Cari judul, pengarang...">
+                                       placeholder="Cari judul, pengarang..."
+                                       value="<?php echo isset($_GET['keyword']) ? htmlspecialchars($_GET['keyword']) : ''; ?>">
                             </div>
                             <div class="col-md-3 mb-3">
                                 <select name="jenis" class="form-control form-control-lg">
@@ -382,7 +383,8 @@ include $root . '/setting/koneksi.php';
                                     $query = "SELECT nama_kategori FROM t_kategori_buku ORDER BY nama_kategori";
                                     $result = mysqli_query($conn, $query);
                                     while($row = mysqli_fetch_assoc($result)) {
-                                        echo "<option value='".$row['nama_kategori']."'>".$row['nama_kategori']."</option>";
+                                        $sel = (isset($_GET['jenis']) && $_GET['jenis'] == $row['nama_kategori']) ? 'selected' : '';
+                                        echo "<option value='".htmlspecialchars($row['nama_kategori'])."' $sel>".htmlspecialchars($row['nama_kategori'])."</option>";
                                     }
                                     ?>
                                 </select>
@@ -390,11 +392,19 @@ include $root . '/setting/koneksi.php';
                             <div class="col-md-3 mb-3">
                                 <select name="ketersediaan" class="form-control form-control-lg">
                                     <option value="">Semua Ketersediaan</option>
-                                    <option value="online">Buku Online</option>
-                                    <option value="offline">Buku Offline</option>
-                                    <option value="both">Online & Offline</option>
+                                    <option value="online" <?php echo (isset($_GET['ketersediaan']) && $_GET['ketersediaan'] == 'online') ? 'selected' : ''; ?>>Buku Online</option>
+                                    <option value="offline" <?php echo (isset($_GET['ketersediaan']) && $_GET['ketersediaan'] == 'offline') ? 'selected' : ''; ?>>Buku Offline</option>
+                                    <option value="both" <?php echo (isset($_GET['ketersediaan']) && $_GET['ketersediaan'] == 'both') ? 'selected' : ''; ?>>Online & Offline</option>
                                 </select>
                             </div>
+
+                            <!-- ADDED: stok minimum input -->
+                            <div class="col-md-2 mb-3">
+                                <input type="number" min="0" name="stok" class="form-control form-control-lg" 
+                                       placeholder="Min. stok"
+                                       value="<?php echo isset($_GET['stok']) ? (int)$_GET['stok'] : ''; ?>">
+                            </div>
+
                             <div class="col-md-2">
                                 <button type="submit" class="btn btn-primary btn-lg btn-block">
                                     <i class="fas fa-search"></i>
@@ -456,6 +466,7 @@ include $root . '/setting/koneksi.php';
                                                 <?php if(!empty($row['file_buku'])): ?>
                                                     <?php if($row['stok'] > 0): ?>
                                                         <span class="badge badge-success">Tersedia Offline</span>
+                                                        <span class="badge badge-info">Stok buku : <?php echo (int)$row['stok']; ?> </span>
                                                         <span class="badge badge-info">Tersedia Online</span>
                                                     <?php else: ?>
                                                         <span class="badge badge-info">Tersedia Hanya Online</span>
@@ -463,6 +474,7 @@ include $root . '/setting/koneksi.php';
                                                 <?php else: ?>
                                                     <?php if($row['stok'] > 0): ?>
                                                         <span class="badge badge-success">Tersedia Offline</span>
+                                                        <span class="badge badge-info">Stok buku : <?php echo (int)$row['stok']; ?> </span>
                                                     <?php else: ?>
                                                         <span class="badge badge-danger">Tidak Tersedia</span>
                                                     <?php endif; ?>
@@ -520,4 +532,4 @@ include $root . '/setting/koneksi.php';
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
-</html> 
+</html>

@@ -100,19 +100,25 @@ include("header_anggota.php");
                     <div class="search-container">
                         <form action="data_buku.php" method="GET" class="d-flex justify-content-center">
                             <div class="input-group" style="max-width: 800px;">
-                                <input type="text" name="txtJudul" class="form-control form-control-lg"
-                                    placeholder="Cari judul, pengarang..." style="border-radius: 5px 0 0 5px;">
-                                <select name="txtKategori" class="form-control form-control-lg"
-                                    style="max-width: 250px; border-radius: 0;">
+                                <input type="text" name="txtJudul" class="form-control form-control-lg" 
+                                       placeholder="Cari judul, pengarang..." style="border-radius: 5px 0 0 5px;"
+                                       value="<?php echo isset($_GET['txtJudul']) ? htmlspecialchars($_GET['txtJudul']) : ''; ?>">
+                                <select name="txtKategori" class="form-control form-control-lg" style="max-width: 250px; border-radius: 0;">
                                     <option value="">Semua Kategori</option>
                                     <?php
-                                    if ($result_kategori) {
-                                        while ($row_kategori = mysqli_fetch_assoc($result_kategori)) {
-                                            echo "<option value='" . htmlspecialchars($row_kategori['nama_kategori']) . "'>" . htmlspecialchars($row_kategori['nama_kategori']) . "</option>";
+                                    if($result_kategori) {
+                                        while($row_kategori = mysqli_fetch_assoc($result_kategori)) {
+                                            $sel = (isset($_GET['txtKategori']) && $_GET['txtKategori'] == $row_kategori['nama_kategori']) ? 'selected' : '';
+                                            echo "<option value='".htmlspecialchars($row_kategori['nama_kategori'])."' $sel>".htmlspecialchars($row_kategori['nama_kategori'])."</option>";
                                         }
                                     }
                                     ?>
                                 </select>
+
+                                <!-- ADDED: txtStok input -->
+                                <input type="number" name="txtStok" class="form-control form-control-lg" style="max-width: 120px; border-radius: 0;"
+                                       placeholder="Min. stok" value="<?php echo isset($_GET['txtStok']) ? (int)$_GET['txtStok'] : ''; ?>">
+
                                 <div class="input-group-append">
                                     <button type="submit" class="btn btn-primary btn-lg"
                                         style="border-radius: 0 5px 5px 0;">
@@ -164,6 +170,7 @@ include("header_anggota.php");
                                                 <?php if (!empty($row['file_buku'])): ?>
                                                     <?php if ($row['stok'] > 0): ?>
                                                         <span class="badge badge-success">Tersedia Offline</span>
+                                                        <span class="badge badge-info">Stok buku : <?php echo (int)$row['stok']; ?> </span>
                                                         <span class="badge badge-info">Tersedia Online</span>
                                                     <?php else: ?>
                                                         <span class="badge badge-info">Tersedia Hanya Online</span>
@@ -171,6 +178,7 @@ include("header_anggota.php");
                                                 <?php else: ?>
                                                     <?php if ($row['stok'] > 0): ?>
                                                         <span class="badge badge-success">Tersedia Offline</span>
+                                                        <span class="badge badge-info">Stok buku : (<?php echo (int)$row['stok']; ?>) </span>
                                                     <?php else: ?>
                                                         <span class="badge badge-danger">Tidak Tersedia</span>
                                                     <?php endif; ?>

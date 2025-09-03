@@ -98,6 +98,14 @@ include("header_anggota.php");
                                     </select>
                                 </div>
                             </div>
+
+                            <!-- ADDED: txtStok input -->
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <input type="number" name="txtStok" min="0" class="form-control" placeholder="Min. stok"
+                                           value="<?php echo isset($_GET['txtStok']) ? (int)$_GET['txtStok'] : ''; ?>">
+                                </div>
+                            </div>
                             <div class="col-md-2">
                                 <button type="submit" class="btn btn-primary btn-block">
                                     <i class="fa fa-search"></i> Cari
@@ -133,6 +141,14 @@ include("header_anggota.php");
                 case 'both':
                     $where .= " AND ((file_buku IS NOT NULL AND file_buku != '') AND stok > 0) ";
                     break;
+            }
+        }
+
+        // ADDED: filter txtStok (minimum stock)
+        if(isset($_GET['txtStok']) && $_GET['txtStok'] !== '') {
+            $stok_min = (int) $_GET['txtStok'];
+            if($stok_min > 0) {
+                $where .= " AND stok >= $stok_min ";
             }
         }
 
@@ -182,9 +198,10 @@ include("header_anggota.php");
                             </small>
                         </p>
                         <div class="mt-2">
-                            <?php if (!empty($row['file_buku'])): ?>
-                                <?php if ($row['stok'] > 0): ?>
-                                    <span class="badge badge-success">Tersedia Offline</span>
+                            <?php if(!empty($row['file_buku'])): ?>
+                                <?php if($row['stok'] > 0): ?>
+                                    <span class="badge badge-success">Tersedia Offline </span>
+                                    <span class="badge badge-info">Stok buku : <?php echo (int)$row['stok']; ?> </span>
                                     <span class="badge badge-info">Tersedia Online</span>
                                 <?php else: ?>
                                     <span class="badge badge-info">Tersedia Hanya Online</span>
@@ -192,6 +209,7 @@ include("header_anggota.php");
                             <?php else: ?>
                                 <?php if ($row['stok'] > 0): ?>
                                     <span class="badge badge-success">Tersedia Offline</span>
+                                    <span class="badge badge-info">Stok buku : <?php echo (int)$row['stok']; ?> </span>
                                 <?php else: ?>
                                     <span class="badge badge-danger">Tidak Tersedia</span>
                                 <?php endif; ?>
@@ -225,12 +243,10 @@ include("header_anggota.php");
                     $active = ($i == $page) ? 'active' : '';
                     echo "<li class='page-item $active'>";
                     echo "<a class='page-link' href='?page=$i";
-                    if (isset($_GET['txtJudul']))
-                        echo "&txtJudul=" . urlencode($_GET['txtJudul']);
-                    if (isset($_GET['txtKategori']))
-                        echo "&txtKategori=" . urlencode($_GET['txtKategori']);
-                    if (isset($_GET['txtKetersediaan']))
-                        echo "&txtKetersediaan=" . urlencode($_GET['txtKetersediaan']);
+                    if(isset($_GET['txtJudul'])) echo "&txtJudul=".urlencode($_GET['txtJudul']);
+                    if(isset($_GET['txtKategori'])) echo "&txtKategori=".urlencode($_GET['txtKategori']);
+                    if(isset($_GET['txtKetersediaan'])) echo "&txtKetersediaan=".urlencode($_GET['txtKetersediaan']);
+                    if(isset($_GET['txtStok'])) echo "&txtStok=".urlencode((int)$_GET['txtStok']);
                     echo "'>$i</a></li>";
                 }
                 echo '</ul>';
