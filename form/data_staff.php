@@ -37,7 +37,13 @@ if($txtStatus != '' && $txtStatus != 'Semua') {
 	$where .= " AND status = '".$txtStatus."' ";
 }
 
-include("header.php");	
+include("header.php");
+
+// scope check (staff management biasanya untuk admin)
+if (!isset($scopes) || !(in_array('staff', $scopes))) {
+    header("Location: ../../landing.php");
+    exit;
+}
 ?>
 <div id="page-wrapper">
 	<div class="row">

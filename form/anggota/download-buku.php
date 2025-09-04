@@ -2,10 +2,9 @@
 session_start();
 require_once '../../setting/koneksi.php';
 
-// Cek login
-if(!isset($_SESSION['login_user']) || $_SESSION['role'] != 3) {
-    header("location: ../../login.php");
-    exit();
+if (!isset($scopes) || !(in_array('downloadBuku-Member', $scopes))) {
+	header("Location: login.php");
+	exit;
 }
 
 // Cek ID buku

@@ -171,6 +171,12 @@ if(isset($_POST['submit'])) {
 }
 
 include("header.php");
+
+// scope check
+if (!isset($scopes) || !(in_array('anggota', $scopes))) {
+    header("Location: ../../landing.php");
+    exit;
+}
 ?>
 
 <div id="page-wrapper">

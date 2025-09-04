@@ -2,10 +2,9 @@
 session_start();
 include "../../setting/koneksi.php";
 
-// Cek apakah user adalah admin/staff
-if(!isset($_SESSION['role']) || ($_SESSION['role'] != 1 && $_SESSION['role'] != 2)) {
-    header("Location: detail-buku.php?id=" . $_POST['id_buku']);
-    exit;
+if (!isset($scopes) || !(in_array('buku', $scopes))) {
+	header("Location: ../../landing.php");
+	exit;
 }
 
 if($_SERVER['REQUEST_METHOD'] == 'POST') {

@@ -4,8 +4,23 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once '../../setting/koneksi.php';
 
-// Cek login
-if(!isset($_SESSION['login_user']) || $_SESSION['role'] != 3) {
+// Ambil scopes user
+$scopes = [];
+if (isset($_SESSION['login_user'])) {
+    $u = mysqli_real_escape_string($db, $_SESSION['login_user']);
+    $sql_s = "SELECT s.name FROM t_account a
+              JOIN t_role_scope rs ON a.id_p_role = rs.role_id
+              JOIN t_scope s ON rs.scope_id = s.id
+              WHERE a.username = '$u'";
+    $rs = mysqli_query($db, $sql_s);
+    if ($rs) {
+        while ($r = mysqli_fetch_assoc($rs))
+            $scopes[] = strtolower(trim($r['name']));
+    }
+}
+
+// Cek login berdasarkan scope
+if (!isset($_SESSION['login_user']) || !in_array('riwayatbaca-member', $scopes)) {
     header("location: ../../login.php");
     exit();
 }
@@ -40,7 +55,7 @@ include("header_anggota.php");
 
 <div class="container-fluid">
     <h1 class="h3 mb-4 text-gray-800">Riwayat Baca</h1>
-    
+
     <div class="card shadow mb-4">
         <div class="card-body">
             <div class="table-responsive">
@@ -57,43 +72,43 @@ include("header_anggota.php");
                         </tr>
                     </thead>
                     <tbody>
-                        <?php 
+                        <?php
                         $no = 1;
-                        while($row = mysqli_fetch_assoc($result)) {
-                        ?>
-                        <tr>
-                            <td><?php echo $no++; ?></td>
-                            <td><?php echo htmlspecialchars($row['nama_buku']); ?></td>
-                            <td><?php echo date('d/m/Y', strtotime($row['tanggal_baca'])); ?></td>
-                            <td><?php echo $row['formatted_waktu_mulai']; ?></td>
-                            <td>
-                                <?php 
-                                if($row['waktu_selesai']) {
-                                    echo $row['formatted_waktu_selesai'];
-                                } else {
-                                    echo '<span class="badge badge-warning">Masih membaca</span>';
-                                }
-                                ?>
-                            </td>
-                            <td>
-                                <?php 
-                                if($row['halaman_terakhir']) {
-                                    echo $row['halaman_terakhir'] . ' dari ' . $row['total_halaman'] . ' halaman';
-                                } else {
-                                    echo '0 dari ' . $row['total_halaman'] . ' halaman';
-                                }
-                                ?>
-                            </td>
-                            <td>
-                                <?php 
-                                if($row['waktu_selesai']) {
-                                    echo $row['formatted_durasi'];
-                                } else {
-                                    echo '-';
-                                }
-                                ?>
-                            </td>
-                        </tr>
+                        while ($row = mysqli_fetch_assoc($result)) {
+                            ?>
+                            <tr>
+                                <td><?php echo $no++; ?></td>
+                                <td><?php echo htmlspecialchars($row['nama_buku']); ?></td>
+                                <td><?php echo date('d/m/Y', strtotime($row['tanggal_baca'])); ?></td>
+                                <td><?php echo $row['formatted_waktu_mulai']; ?></td>
+                                <td>
+                                    <?php
+                                    if ($row['waktu_selesai']) {
+                                        echo $row['formatted_waktu_selesai'];
+                                    } else {
+                                        echo '<span class="badge badge-warning">Masih membaca</span>';
+                                    }
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    if ($row['halaman_terakhir']) {
+                                        echo $row['halaman_terakhir'] . ' dari ' . $row['total_halaman'] . ' halaman';
+                                    } else {
+                                        echo '0 dari ' . $row['total_halaman'] . ' halaman';
+                                    }
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    if ($row['waktu_selesai']) {
+                                        echo $row['formatted_durasi'];
+                                    } else {
+                                        echo '-';
+                                    }
+                                    ?>
+                                </td>
+                            </tr>
                         <?php } ?>
                     </tbody>
                 </table>
@@ -103,14 +118,15 @@ include("header_anggota.php");
 </div>
 
 <style>
-.badge {
-    padding: 0.5em 0.75em;
-    font-size: 0.75em;
-}
-.badge-warning {
-    background-color: #ffc107;
-    color: #212529;
-}
+    .badge {
+        padding: 0.5em 0.75em;
+        font-size: 0.75em;
+    }
+
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
 </style>
 
-<?php include("footer.php"); ?> 
+<?php include("footer.php"); ?>
