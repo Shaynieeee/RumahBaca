@@ -2,10 +2,9 @@
 session_start();
 require_once '../setting/koneksi.php';
 
-// Cek apakah user sudah login dan admin
-if(!isset($_SESSION['login_user']) || $_SESSION['role'] != 1) {
-    header("location: ../login.php");
-    exit();
+if (!isset($scopes) || !(in_array('buku', $scopes))) {
+	header("Location: ../../landing.php");
+	exit;
 }
 
 echo "<h1>Perbaikan Path Gambar</h1>";

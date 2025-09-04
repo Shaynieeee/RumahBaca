@@ -1,9 +1,9 @@
 <?php
 session_start();
 // Cek apakah yang mengakses adalah admin
-if (!isset($_SESSION['login_user']) || $_SESSION['role'] != 1) {
-    header("Location: login.php");
-    exit();
+if (!isset($scopes) || !(in_array('staff', $scopes))) {
+	header("Location: ../../landing.php");
+	exit;
 }
 
 require_once '../setting/koneksi.php';
