@@ -241,6 +241,12 @@ if (isset($_GET['success']) && isset($_GET['id_anggota'])) {
 }
 
 include("header.php");
+
+// scope check
+if (!isset($scopes) || !(in_array('peminjaman', $scopes))) {
+    header("Location: ../../landing.php");
+    exit;
+}
 ?>
 
 <!-- Tampilkan hasil di bagian atas jika ada success -->

@@ -1,5 +1,12 @@
 <?php
 include("header.php");
+
+// scope check
+if (!isset($scopes) || !in_array('peminjaman-terlambat', $scopes)) {
+    header("Location: ../../landing.php");
+    exit;
+}
+
 require_once '../setting/koneksi.php';
 
 // Tambahkan di bagian atas file setelah koneksi database

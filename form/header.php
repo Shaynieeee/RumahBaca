@@ -341,7 +341,7 @@ if ($role > 0) {
 
 
         <!-- Modal Keterlambatan -->
-        <?php if (in_array('peminjaman', $scopes) && $jumlah_keterlambatan > 0): ?>
+        <?php if (in_array('peminjaman-terlambat', $scopes) && $jumlah_keterlambatan > 0): ?>
             <div class="modal fade" id="modalKeterlambatan" tabindex="-1" role="dialog"
                 aria-labelledby="modalKeterlambatanLabel">
                 <div class="modal-dialog modal-lg" role="document">
