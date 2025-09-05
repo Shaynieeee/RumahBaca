@@ -1,6 +1,7 @@
 <?php
 // Gunakan __DIR__ untuk mendapatkan path yang benar
 $root = dirname(__DIR__);
+$catalog_mode = "dashboard_guest";
 include $root . '/setting/koneksi.php';
 ?>
 <!DOCTYPE html>

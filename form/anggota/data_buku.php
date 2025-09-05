@@ -55,6 +55,7 @@ include("header_anggota.php");
         </div>
     </div>
 <?php
+$catalog_mode = "catalog_member";
 $root = dirname(__DIR__, 2);
 include $root . '/components/catalog/catalog.php';
 ?>

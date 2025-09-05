@@ -1,5 +1,6 @@
 <?php
 $root = dirname(__DIR__);
+$catalog_mode = "catalog_guest";
 include $root . '/setting/koneksi.php';
 
 // Pagination setup

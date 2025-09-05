@@ -98,7 +98,7 @@ if (mysqli_num_rows($result_check_table) == 0) {
                     <h2>Selamat datang, <?php echo htmlspecialchars($anggota['nama']); ?></h2>
                     <h1 class="mt-4 mb-5">Temukan Buku Favoritmu</h1>
 <?php 
-$catalog_mode = "Terbaru";
+$catalog_mode = "dashboard_member";
 include $root . '/components/catalog/catalog.php';
 ?>
 <?php include "footer.php"; ?>
