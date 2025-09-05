@@ -1,6 +1,10 @@
 <?php
 session_start();
+include("header_anggota.php");
 require_once '../../setting/koneksi.php';
+
+// project root (dua level ke atas dari form/anggota)
+$root = dirname(__DIR__, 2);
 
 // Ambil scopes user
 $scopes = [];
@@ -83,8 +87,6 @@ if (mysqli_num_rows($result_check_table) == 0) {
         }
     }
 }
-
-include("header_anggota.php");
 ?>
 
 <div id="page-wrapper">
@@ -95,135 +97,8 @@ include("header_anggota.php");
                 <div class="col-md-12 text-center">
                     <h2>Selamat datang, <?php echo htmlspecialchars($anggota['nama']); ?></h2>
                     <h1 class="mt-4 mb-5">Temukan Buku Favoritmu</h1>
-
-                    <!-- Form Pencarian -->
-                    <div class="search-container">
-                        <form action="data_buku.php" method="GET" class="d-flex justify-content-center">
-                            <div class="input-group" style="max-width: 800px;">
-                                <input type="text" name="txtJudul" class="form-control form-control-lg" 
-                                       placeholder="Cari judul, pengarang..." style="border-radius: 5px 0 0 5px;"
-                                       value="<?php echo isset($_GET['txtJudul']) ? htmlspecialchars($_GET['txtJudul']) : ''; ?>">
-                                <select name="txtKategori" class="form-control form-control-lg" style="max-width: 250px; border-radius: 0;">
-                                    <option value="">Semua Kategori</option>
-                                    <?php
-                                    if($result_kategori) {
-                                        while($row_kategori = mysqli_fetch_assoc($result_kategori)) {
-                                            $sel = (isset($_GET['txtKategori']) && $_GET['txtKategori'] == $row_kategori['nama_kategori']) ? 'selected' : '';
-                                            echo "<option value='".htmlspecialchars($row_kategori['nama_kategori'])."' $sel>".htmlspecialchars($row_kategori['nama_kategori'])."</option>";
-                                        }
-                                    }
-                                    ?>
-                                </select>
-
-                                <!-- ADDED: txtStok input -->
-                                <input type="number" name="txtStok" class="form-control form-control-lg" style="max-width: 120px; border-radius: 0;"
-                                       placeholder="Min. stok" value="<?php echo isset($_GET['txtStok']) ? (int)$_GET['txtStok'] : ''; ?>">
-
-                                <div class="input-group-append">
-                                    <button type="submit" class="btn btn-primary btn-lg"
-                                        style="border-radius: 0 5px 5px 0;">
-                                        <i class="fa fa-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Buku Terbaru -->
-            <div class="row mt-5">
-                <div class="col-md-12">
-                    <h3 class="mb-4"><i class="fa fa-book"></i> Buku Terbaru</h3>
-                    <div class="row">
-                        <?php
-                        if ($result_buku && mysqli_num_rows($result_buku) > 0) {
-                            while ($row = mysqli_fetch_assoc($result_buku)) {
-                                $gambar_id = $row['gambar'] ?? '';
-                                $gambar_path = "../../image/buku/default.jpg"; // Default image
-                        
-                                if (!empty($gambar_id)) {
-                                    $files = glob("../../image/buku/{$gambar_id}*");
-                                    if (!empty($files)) {
-                                        $gambar_path = $files[0];
-                                    }
-                                }
-                                ?>
-                                <div class="col-md-3 mb-4">
-                                    <div class="card h-100">
-                                        <img src="<?php echo htmlspecialchars($gambar_path); ?>" class="card-img-top"
-                                            alt="<?php echo htmlspecialchars($row['nama_buku'] ?? 'Tidak ada judul'); ?>"
-                                            style="height: 250px; object-fit: cover;">
-                                        <div class="card-body d-flex flex-column">
-                                            <h5 class="card-title text-truncate">
-                                                <?php echo htmlspecialchars($row['nama_buku'] ?? 'Tidak ada judul'); ?>
-                                            </h5>
-                                            <p class="card-text">
-                                                <small class="text-muted">
-                                                    <i class="fa fa-user"></i>
-                                                    <?php echo htmlspecialchars($row['penulis'] ?? 'Tidak ada penulis'); ?><br>
-                                                    <i class="fa fa-calendar"></i>
-                                                    <?php echo htmlspecialchars($row['tahun_terbit'] ?? 'Tidak ada tahun'); ?>
-                                                </small>
-                                            </p>
-                                            <div class="mt-2">
-                                                <?php if (!empty($row['file_buku'])): ?>
-                                                    <?php if ($row['stok'] > 0): ?>
-                                                        <span class="badge badge-success">Tersedia Offline</span>
-                                                        <span class="badge badge-info">Stok buku : <?php echo (int)$row['stok']; ?> </span>
-                                                        <span class="badge badge-info">Tersedia Online</span>
-                                                    <?php else: ?>
-                                                        <span class="badge badge-info">Tersedia Hanya Online</span>
-                                                    <?php endif; ?>
-                                                <?php else: ?>
-                                                    <?php if ($row['stok'] > 0): ?>
-                                                        <span class="badge badge-success">Tersedia Offline</span>
-                                                        <span class="badge badge-info">Stok buku : (<?php echo (int)$row['stok']; ?>) </span>
-                                                    <?php else: ?>
-                                                        <span class="badge badge-danger">Tidak Tersedia</span>
-                                                    <?php endif; ?>
-                                                <?php endif; ?>
-                                            </div>
-                                            <div class="btn-group mt-auto w-100">
-                                                <a href="detail-buku.php?id=<?php echo (int) $row['id_t_buku']; ?>"
-                                                    class="btn btn-info btn-sm">
-                                                    <i class="fa fa-info-circle"></i> Detail
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php
-                            }
-                        } else {
-                            echo "<p class='text-center'>Tidak ada buku terbaru</p>";
-                        }
-                        ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-</div>
-
-<style>
-    .badge {
-        padding: 6px 10px;
-        margin: 2px;
-        font-size: 12px;
-    }
-
-    .badge-success {
-        background-color: #28a745;
-    }
-
-    .badge-info {
-        background-color: #17a2b8;
-    }
-
-    .badge-danger {
-        background-color: #dc3545;
-    }
-</style>
-
+<?php 
+$catalog_mode = "Terbaru";
+include $root . '/components/catalog/catalog.php';
+?>
 <?php include "footer.php"; ?>
