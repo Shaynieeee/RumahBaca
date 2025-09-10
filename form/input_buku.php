@@ -79,6 +79,39 @@ if (!$result_kategori) {
 	$result_kategori = mysqli_query($db, "SELECT * FROM t_kategori_buku ORDER BY nama_kategori");
 }
 
+// --- TAGS: siapkan tabel dan data tags ---
+mysqli_query($db, "CREATE TABLE IF NOT EXISTS t_tag (
+	id_t_tag INT AUTO_INCREMENT PRIMARY KEY,
+	nama_tag VARCHAR(100) NOT NULL UNIQUE,
+	create_by VARCHAR(50) DEFAULT NULL,
+	create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=latin1");
+
+mysqli_query($db, "CREATE TABLE IF NOT EXISTS t_buku_tag (
+	id_t_buku INT NOT NULL,
+	id_t_tag INT NOT NULL,
+	PRIMARY KEY (id_t_buku, id_t_tag),
+	FOREIGN KEY (id_t_buku) REFERENCES t_buku(id_t_buku) ON DELETE CASCADE,
+	FOREIGN KEY (id_t_tag) REFERENCES t_tag(id_t_tag) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1");
+
+$all_tags = [];
+if ($rt = mysqli_query($db, "SELECT nama_tag FROM t_tag ORDER BY nama_tag")) {
+	while ($r = mysqli_fetch_assoc($rt)) $all_tags[] = $r['nama_tag'];
+}
+
+$selected_tag_names = [];
+if ($id_buku > 0) {
+	$sql_sel_names = "SELECT t.nama_tag
+	                  FROM t_buku_tag bt
+	                  JOIN t_tag t ON t.id_t_tag = bt.id_t_tag
+	                  WHERE bt.id_t_buku = " . (int)$id_buku . "
+	                  ORDER BY t.nama_tag";
+	if ($rsn = mysqli_query($db, $sql_sel_names)) {
+		while ($rn = mysqli_fetch_assoc($rsn)) $selected_tag_names[] = $rn['nama_tag'];
+	}
+}
+
 // Cari file gambar yang sesuai jika ini adalah halaman edit
 if (!empty($id_buku) && isset($buku['gambar']) && !empty($buku['gambar'])) {
 	$gambar_id = $buku['gambar'];
@@ -239,6 +272,29 @@ if (isset($_POST['submit'])) {
 					throw new Exception('Execute failed: ' . $stmt->error);
 				}
 
+				// Simpan tags (sinkronisasi)
+				$input_tags = isset($_POST['tags']) && is_array($_POST['tags']) ? array_map('trim', $_POST['tags']) : [];
+				$input_tags = array_values(array_unique(array_filter($input_tags)));
+				mysqli_query($db, "DELETE FROM t_buku_tag WHERE id_t_buku = " . (int)$id_buku);
+				if (!empty($input_tags)) {
+					$insTag = mysqli_prepare($db, "INSERT INTO t_tag(nama_tag, create_by) VALUES(?, ?) ON DUPLICATE KEY UPDATE nama_tag = VALUES(nama_tag)");
+					foreach ($input_tags as $name) {
+						if ($name === '') continue;
+						mysqli_stmt_bind_param($insTag, 'ss', $name, $usersession);
+						mysqli_stmt_execute($insTag);
+					}
+					// ambil id_t_tag dan mapping
+					$escaped = array_map(function($t) use ($db){ return "'" . mysqli_real_escape_string($db, $t) . "'"; }, $input_tags);
+					$qids = "SELECT id_t_tag FROM t_tag WHERE nama_tag IN (" . implode(',', $escaped) . ")";
+					$rids = mysqli_query($db, $qids);
+					$insMap = mysqli_prepare($db, "INSERT IGNORE INTO t_buku_tag(id_t_buku, id_t_tag) VALUES(?, ?)");
+					while ($rids && ($row = mysqli_fetch_assoc($rids))) {
+						$tid = (int)$row['id_t_tag'];
+						mysqli_stmt_bind_param($insMap, 'ii', $id_buku, $tid);
+						mysqli_stmt_execute($insMap);
+					}
+				}
+
 				mysqli_commit($db);
 
 				// Redirect setelah berhasil update
@@ -381,6 +437,29 @@ if (isset($_POST['submit'])) {
 
 				if (!mysqli_stmt_execute($stmt)) {
 					throw new Exception('Execute failed: ' . mysqli_stmt_error($stmt));
+				}
+
+				$inserted_book_id = mysqli_insert_id($db); // Dapatkan ID buku yang baru saja diinsert
+
+				// Simpan tags (insert)
+				$input_tags = isset($_POST['tags']) && is_array($_POST['tags']) ? array_map('trim', $_POST['tags']) : [];
+				$input_tags = array_values(array_unique(array_filter($input_tags)));
+				if (!empty($input_tags)) {
+					$insTag = mysqli_prepare($db, "INSERT INTO t_tag(nama_tag, create_by) VALUES(?, ?) ON DUPLICATE KEY UPDATE nama_tag = VALUES(nama_tag)");
+					foreach ($input_tags as $name) {
+						if ($name === '') continue;
+						mysqli_stmt_bind_param($insTag, 'ss', $name, $usersession);
+						mysqli_stmt_execute($insTag);
+					}
+					$escaped = array_map(function($t) use ($db){ return "'" . mysqli_real_escape_string($db, $t) . "'"; }, $input_tags);
+					$qids = "SELECT id_t_tag FROM t_tag WHERE nama_tag IN (" . implode(',', $escaped) . ")";
+					$rids = mysqli_query($db, $qids);
+					$insMap = mysqli_prepare($db, "INSERT IGNORE INTO t_buku_tag(id_t_buku, id_t_tag) VALUES(?, ?)");
+					while ($rids && ($row = mysqli_fetch_assoc($rids))) {
+						$tid = (int)$row['id_t_tag'];
+						mysqli_stmt_bind_param($insMap, 'ii', $inserted_book_id, $tid);
+						mysqli_stmt_execute($insMap);
+					}
 				}
 
 				mysqli_commit($db);
@@ -564,6 +643,27 @@ if (!isset($scopes) || !(in_array('buku', $scopes))) {
 										<textarea name="sinopsis" class="form-control" rows="5"
 											required><?php echo $buku ? htmlspecialchars($buku['sinopsis']) : ''; ?></textarea>
 									</div>
+
+									<div class="form-group">
+										<label>Tags</label>
+										<div id="tags-wrapper">
+											<!-- baris input tag akan dibuat via JS -->
+										</div>
+
+										<button type="button" class="btn btn-sm btn-outline-primary" id="btn-add-tag">
+											+ Tambah Tag
+										</button>
+
+										<datalist id="tags-suggestions">
+											<?php foreach ($all_tags as $tn): ?>
+												<option value="<?php echo htmlspecialchars($tn); ?>"></option>
+											<?php endforeach; ?>
+										</datalist>
+
+										<small class="form-text text-muted">
+											Ketik tag dan tekan Enter atau klik “Tambah Tag” untuk menambah baris. Klik hapus untuk menghapus.
+										</small>
+									</div>
 								</div>
 
 								<div class="col-md-4">
@@ -707,6 +807,41 @@ if (!isset($scopes) || !(in_array('buku', $scopes))) {
 			// Jalankan saat halaman dimuat dan saat select berubah
 			$('#ketersediaan').change(toggleFields);
 			toggleFields();
+
+			// --- Dynamic Tag Rows ---
+			var existing = <?php echo json_encode($selected_tag_names ?? []); ?>;
+			var $wrap = $('#tags-wrapper');
+
+			function makeRow(val) {
+				var $row = $('<div class="tag-row input-group mb-2"></div>');
+				var $input = $('<input type="text" class="form-control" name="tags[]" list="tags-suggestions" placeholder="cth: horor" />');
+				if (val) $input.val(val);
+				var $append = $('<div class="input-group-append"></div>');
+				var $btnDel = $('<button type="button" class="btn btn-outline-danger">Hapus</button>');
+				$btnDel.on('click', function(){ $row.remove(); });
+				$input.on('keydown', function(e){
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						if (this.value.trim() !== '') $('#btn-add-tag').trigger('click');
+					}
+				});
+				$append.append($btnDel);
+				$row.append($input).append($append);
+				return $row;
+			}
+
+			function ensureAtLeastOneRow() {
+				if ($wrap.children().length === 0) $wrap.append(makeRow(''));
+			}
+
+			$('#btn-add-tag').on('click', function(){
+				$wrap.append(makeRow(''));
+			});
+
+			(existing && existing.length ? existing : ['']).forEach(function(v){
+				$wrap.append(makeRow(v));
+			});
+			ensureAtLeastOneRow();
 		});
 	</script>
 
@@ -757,6 +892,8 @@ if (!isset($scopes) || !(in_array('buku', $scopes))) {
 			border-color: #c3e6cb;
 			color: #155724;
 		}
+
+		.tag-row .btn { border-top-left-radius: 0; border-bottom-left-radius: 0; }
 	</style>
 
 	<!-- jQuery -->
