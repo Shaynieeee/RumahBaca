@@ -13,54 +13,90 @@ if (isset($catalog_mode) && $catalog_mode == "Terbaru") {
         <div class="card">
             <div class="card-body">
                 <form method="GET" action="">
-                    <div class="row">
+                    <div class="row search-controls">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <input type="text" name="txtJudul" class="form-control" placeholder="Cari judul buku..."
-                                    value="<?php echo isset($_GET['txtJudul']) ? htmlspecialchars($_GET['txtJudul']) : ''; ?>">
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text"><i class="fa fa-search"></i></span></div>
+                                    <input type="text" name="txtJudul" class="form-control" placeholder="Cari judul buku..."
+                                        value="<?php echo isset($_GET['txtJudul']) ? htmlspecialchars($_GET['txtJudul']) : ''; ?>">
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <select name="txtKategori" class="form-control">
-                                    <option value="">Semua Kategori</option>
-                                    <?php
-                                    // Gunakan tabel t_kategori_buku untuk kategori
-                                    $sql_kategori = "SELECT nama_kategori FROM t_kategori_buku ORDER BY nama_kategori";
-                                    $result_kategori = mysqli_query($db, $sql_kategori);
-                                    while ($row_kategori = mysqli_fetch_assoc($result_kategori)) {
-                                        $selected = (isset($_GET['txtKategori']) && $_GET['txtKategori'] == $row_kategori['nama_kategori']) ? 'selected' : '';
-                                        echo "<option value='" . $row_kategori['nama_kategori'] . "' $selected>" . $row_kategori['nama_kategori'] . "</option>";
-                                    }
-                                    ?>
-                                </select>
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text"><i class="fa fa-tags"></i></span></div>
+                                    <select name="txtKategori" class="form-control">
+                                        <option value="">Semua Kategori</option>
+                                        <?php
+                                        // Gunakan tabel t_kategori_buku untuk kategori
+                                        $sql_kategori = "SELECT nama_kategori FROM t_kategori_buku ORDER BY nama_kategori";
+                                        $result_kategori = mysqli_query($db, $sql_kategori);
+                                        while ($row_kategori = mysqli_fetch_assoc($result_kategori)) {
+                                            $selected = (isset($_GET['txtKategori']) && $_GET['txtKategori'] == $row_kategori['nama_kategori']) ? 'selected' : '';
+                                            echo "<option value='" . $row_kategori['nama_kategori'] . "' $selected>" . $row_kategori['nama_kategori'] . "</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
                             </div>
                         </div>
+                        <!-- ADDED: Tag dropdown -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <select name="txtKetersediaan" class="form-control">
-                                    <option value="">Semua Ketersediaan</option>
-                                    <option value="online" <?php echo (isset($_GET['txtKetersediaan']) && $_GET['txtKetersediaan'] == 'online') ? 'selected' : ''; ?>>Buku Online
-                                    </option>
-                                    <option value="offline" <?php echo (isset($_GET['txtKetersediaan']) && $_GET['txtKetersediaan'] == 'offline') ? 'selected' : ''; ?>>Buku Offline
-                                    </option>
-                                    <option value="both" <?php echo (isset($_GET['txtKetersediaan']) && $_GET['txtKetersediaan'] == 'both') ? 'selected' : ''; ?>>Online & Offline
-                                    </option>
-                                </select>
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text"><i class="fa fa-hashtag"></i></span></div>
+                                    <select name="txtTag" class="form-control">
+                                        <option value="">Semua Tag</option>
+                                        <?php
+                                        $sql_tags = "SELECT nama_tag FROM t_tag ORDER BY nama_tag";
+                                        if ($result_tags = mysqli_query($db, $sql_tags)) {
+                                            while ($row_tag = mysqli_fetch_assoc($result_tags)) {
+                                                $selected = (isset($_GET['txtTag']) && $_GET['txtTag'] == $row_tag['nama_tag']) ? 'selected' : '';
+                                                echo "<option value='" . htmlspecialchars($row_tag['nama_tag']) . "' $selected>" . htmlspecialchars($row_tag['nama_tag']) . "</option>";
+                                            }
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text"><i class="fa fa-book"></i></span></div>
+                                    <select name="txtKetersediaan" class="form-control">
+                                        <option value="">Semua Ketersediaan</option>
+                                        <option value="online" <?php echo (isset($_GET['txtKetersediaan']) && $_GET['txtKetersediaan'] == 'online') ? 'selected' : ''; ?>>Buku Online</option>
+                                        <option value="offline" <?php echo (isset($_GET['txtKetersediaan']) && $_GET['txtKetersediaan'] == 'offline') ? 'selected' : ''; ?>>Buku Offline</option>
+                                        <option value="both" <?php echo (isset($_GET['txtKetersediaan']) && $_GET['txtKetersediaan'] == 'both') ? 'selected' : ''; ?>>Online & Offline</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row search-controls">
                         <!-- ADDED: txtStok input -->
                         <div class="col-md-2">
                             <div class="form-group">
-                                <input type="number" name="txtStok" min="0" class="form-control" placeholder="Min. stok"
-                                    value="<?php echo isset($_GET['txtStok']) ? (int) $_GET['txtStok'] : ''; ?>">
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text"><i class="fa fa-sort-numeric-asc"></i></span></div>
+                                    <input type="number" name="txtStok" min="0" class="form-control" placeholder="Min. stok"
+                                        value="<?php echo isset($_GET['txtStok']) ? (int) $_GET['txtStok'] : ''; ?>">
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-2">
                             <button type="submit" class="btn btn-primary btn-block">
                                 <i class="fa fa-search"></i> Cari
                             </button>
+                        </div>
+                        <div class="col-md-2">
+                            <?php $baseUrl = strtok($_SERVER['REQUEST_URI'], '?'); ?>
+                            <a href="<?php echo $baseUrl; ?>" class="btn btn-light btn-block">
+                                <i class="fa fa-undo"></i> Reset
+                            </a>
                         </div>
                     </div>
                 </form>
@@ -74,12 +110,19 @@ if (isset($catalog_mode) && $catalog_mode == "Terbaru") {
     <?php
     // Query untuk mencari buku
     $where = "WHERE 1=1";
+    $join = ""; // ADDED: optional join when filtering by tag
     if (isset($_GET['txtJudul']) && !empty($_GET['txtJudul'])) {
         $where .= " AND nama_buku LIKE '%" . mysqli_real_escape_string($db, $_GET['txtJudul']) . "%'";
 
     }
     if (isset($_GET['txtKategori']) && !empty($_GET['txtKategori'])) {
         $where .= " AND jenis = '" . mysqli_real_escape_string($db, $_GET['txtKategori']) . "'";
+    }
+    // ADDED: filter by single tag
+    if (isset($_GET['txtTag']) && $_GET['txtTag'] !== '') {
+        $tag = mysqli_real_escape_string($db, $_GET['txtTag']);
+        $join .= " JOIN t_buku_tag bt ON bt.id_t_buku = t_buku.id_t_buku JOIN t_tag tg ON tg.id_t_tag = bt.id_t_tag ";
+        $where .= " AND tg.nama_tag = '" . $tag . "'";
     }
     if (isset($_GET['txtKetersediaan']) && !empty($_GET['txtKetersediaan'])) {
         switch ($_GET['txtKetersediaan']) {
@@ -108,7 +151,8 @@ if (isset($catalog_mode) && $catalog_mode == "Terbaru") {
     $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
     $start = ($page - 1) * $limit;
 
-    $sql = "SELECT * FROM t_buku $where ORDER BY nama_buku LIMIT $start, $limit";
+    $distinct = $join !== '' ? 'DISTINCT' : '';
+    $sql = "SELECT $distinct t_buku.* FROM t_buku $join $where ORDER BY nama_buku LIMIT $start, $limit";
     $result = mysqli_query($db, $sql);
 
     while ($row = mysqli_fetch_assoc($result)) {
@@ -184,7 +228,9 @@ if (isset($catalog_mode) && $catalog_mode == "Terbaru") {
 <div class="row">
     <div class="col-lg-12">
         <?php
-        $sql_count = "SELECT COUNT(*) as total FROM t_buku $where";
+        $sql_count = $join === ''
+            ? "SELECT COUNT(*) as total FROM t_buku $where"
+            : "SELECT COUNT(DISTINCT t_buku.id_t_buku) as total FROM t_buku $join $where";
         $result_count = mysqli_query($db, $sql_count);
         $row_count = mysqli_fetch_assoc($result_count);
         $total_pages = ceil($row_count['total'] / $limit);
@@ -199,6 +245,8 @@ if (isset($catalog_mode) && $catalog_mode == "Terbaru") {
                     echo "&txtJudul=" . urlencode($_GET['txtJudul']);
                 if (isset($_GET['txtKategori']))
                     echo "&txtKategori=" . urlencode($_GET['txtKategori']);
+                if (isset($_GET['txtTag']))
+                    echo "&txtTag=" . urlencode($_GET['txtTag']);
                 if (isset($_GET['txtKetersediaan']))
                     echo "&txtKetersediaan=" . urlencode($_GET['txtKetersediaan']);
                 if (isset($_GET['txtStok']))
