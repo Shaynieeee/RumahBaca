@@ -812,7 +812,6 @@ if (!isset($scopes) || !(in_array('buku', $scopes))) {
 			var existing = <?php echo json_encode($selected_tag_names ?? []); ?>;
 			var $wrap = $('#tags-wrapper');
 
-			//kombinasi csr dan ssr
 			function makeRow(val) {
 				var $row = $('<div class="tag-row input-group mb-2"></div>');
 				var $input = $('<input type="text" class="form-control" name="tags[]" list="tags-suggestions" placeholder="cth: horor" />');
