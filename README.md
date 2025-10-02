@@ -18,10 +18,6 @@ Aplikasi Perpustakaan sederhana berbasis Web
 - TCPDF
 
 ## User Test
-- Anggota
-    username	: ytp
-    password    : ytp1234
-
 - Admin
-    username	: adm
-    password    : adm1234# RumahBaca
+    username	: min
+    password    : admin123
